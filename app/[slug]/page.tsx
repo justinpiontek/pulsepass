@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { getPublicProfileBySlug } from "@/lib/data";
@@ -11,11 +12,33 @@ type ContactPageProps = {
   }>;
 };
 
+function resolveWalletHref(options: {
+  appleUrl?: string | null;
+  googleUrl?: string | null;
+  userAgent: string;
+}) {
+  const userAgent = options.userAgent || "";
+  const isAppleDevice = /iPhone|iPad|iPod/i.test(userAgent);
+  const isAndroidDevice = /Android/i.test(userAgent);
+
+  if (isAppleDevice && options.appleUrl) {
+    return options.appleUrl;
+  }
+
+  if (isAndroidDevice && options.googleUrl) {
+    return options.googleUrl;
+  }
+
+  return options.appleUrl || options.googleUrl || null;
+}
+
 export default async function ContactPage({ params }: ContactPageProps) {
   if (!hasSupabasePublicEnv()) {
     notFound();
   }
 
+  const headerStore = await headers();
+  const userAgent = headerStore.get("user-agent") || "";
   const { slug } = await params;
   const data = await getPublicProfileBySlug(slug);
 
@@ -34,6 +57,11 @@ export default async function ContactPage({ params }: ContactPageProps) {
       website: profile.website
     })
   )}`;
+  const walletHref = resolveWalletHref({
+    appleUrl: profile.wallet_apple_url,
+    googleUrl: profile.wallet_google_url,
+    userAgent
+  });
 
   return (
     <main className="public-shell">
@@ -52,10 +80,9 @@ export default async function ContactPage({ params }: ContactPageProps) {
           </a>
         </div>
 
-        {profile.wallet_apple_url || profile.wallet_google_url ? (
+        {walletHref ? (
           <div className="wallet-actions">
-            {profile.wallet_apple_url ? <a href={profile.wallet_apple_url}>Add to Apple Wallet</a> : null}
-            {profile.wallet_google_url ? <a href={profile.wallet_google_url}>Add to Google Wallet</a> : null}
+            <a href={walletHref}>Add to Wallet</a>
           </div>
         ) : null}
       </section>

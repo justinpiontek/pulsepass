@@ -73,6 +73,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const qrUrl = contactUrl
     ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(contactUrl)}`
     : null;
+  const currentPlanId = subscription?.plan === "pro" || subscription?.plan === "enterprise" ? subscription.plan : "starter";
 
   async function signOutAction() {
     "use server";
@@ -130,6 +131,28 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     ? "Save the event details before publishing the event page."
                     : query.error}
             </p>
+          ) : null}
+          {!accessIsActive ? (
+            <div className="notice">
+              <p className="micro-copy">
+                Finish checkout to unlock publishing and keep your QR live. If you want events and RSVP,
+                start Pro instead of Starter.
+              </p>
+              <div className="button-row" style={{ marginTop: 14 }}>
+                <form action="/api/checkout/session" method="post">
+                  <input name="plan" type="hidden" value="starter" />
+                  <button className="ghost-button" type="submit">
+                    Start Starter checkout
+                  </button>
+                </form>
+                <form action="/api/checkout/session" method="post">
+                  <input name="plan" type="hidden" value="pro" />
+                  <button className="primary-button" type="submit">
+                    Start Pro checkout
+                  </button>
+                </form>
+              </div>
+            </div>
           ) : null}
 
           <div className="stat-row">
@@ -191,13 +214,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <textarea defaultValue={profile?.bio || ""} name="bio" />
             </label>
             <label>
-              Apple Wallet URL
+              Apple Wallet pass URL
               <input defaultValue={profile?.wallet_apple_url || ""} name="wallet_apple_url" type="url" />
             </label>
             <label>
-              Google Wallet URL
+              Google Wallet pass URL
               <input defaultValue={profile?.wallet_google_url || ""} name="wallet_google_url" type="url" />
             </label>
+            <p className="micro-copy">
+              If you connect a wallet pass URL, your public page shows one simple <strong>Add to Wallet</strong> button.
+            </p>
             <button className="primary-button full-width" type="submit">
               Save contact page
             </button>
@@ -344,6 +370,24 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <span>{plan.name}</span>
             </div>
           </div>
+          {!accessIsActive ? (
+            <div className="button-row" style={{ marginTop: 18 }}>
+              <form action="/api/checkout/session" method="post">
+                <input name="plan" type="hidden" value={currentPlanId === "pro" ? "pro" : "starter"} />
+                <button className="ghost-button" type="submit">
+                  {currentPlanId === "pro" ? "Continue Pro checkout" : "Continue Starter checkout"}
+                </button>
+              </form>
+              {currentPlanId !== "pro" ? (
+                <form action="/api/checkout/session" method="post">
+                  <input name="plan" type="hidden" value="pro" />
+                  <button className="primary-button" type="submit">
+                    Upgrade to Pro checkout
+                  </button>
+                </form>
+              ) : null}
+            </div>
+          ) : null}
         </section>
       </div>
     </main>
