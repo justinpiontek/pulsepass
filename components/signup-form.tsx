@@ -62,6 +62,7 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
         email: form.email,
         password: form.password,
         options: {
+          emailRedirectTo: `${window.location.origin}/signin?next=/dashboard`,
           data: {
             full_name: form.fullName,
             company_name: form.companyName,

@@ -15,6 +15,7 @@ import { absoluteUrl, formatDateRange } from "@/lib/utils";
 
 type DashboardPageProps = {
   searchParams: Promise<{
+    billing?: string;
     error?: string;
     published?: string;
     saved?: string;
@@ -22,6 +23,8 @@ type DashboardPageProps = {
 };
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
+  const query = await searchParams;
+
   if (!hasSupabasePublicEnv()) {
     return (
       <main className="dashboard-shell">
@@ -48,10 +51,17 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/signin?next=/dashboard");
+    const params = new URLSearchParams({
+      next: "/dashboard"
+    });
+
+    if (query.billing === "success") {
+      params.set("billing", "success");
+    }
+
+    redirect(`/signin?${params.toString()}`);
   }
 
-  const query = await searchParams;
   const { profile, event, subscription } = await getDashboardData(user.id);
   const plan = getPlan(subscription?.plan || "starter");
   const accessIsActive = hasActiveAccess(subscription?.status);

@@ -1,7 +1,10 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 import { PublicNav } from "@/components/public-nav";
 import { SigninForm } from "@/components/signin-form";
+import { hasSupabasePublicEnv } from "@/lib/env";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type SigninPageProps = {
   searchParams: Promise<{
@@ -14,6 +17,18 @@ type SigninPageProps = {
 
 export default async function SigninPage({ searchParams }: SigninPageProps) {
   const query = await searchParams;
+  const nextPath = query.next || "/dashboard";
+
+  if (hasSupabasePublicEnv()) {
+    const supabase = await createSupabaseServerClient();
+    const {
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (user && !query.checkout) {
+      redirect(nextPath);
+    }
+  }
 
   return (
     <>
@@ -31,7 +46,7 @@ export default async function SigninPage({ searchParams }: SigninPageProps) {
         <SigninForm
           checkoutPlan={query.checkout}
           defaultEmail={query.email}
-          nextPath={query.next || "/dashboard"}
+          nextPath={nextPath}
         />
 
         <section className="panel">

@@ -82,7 +82,7 @@ export async function POST(request: Request) {
           email
         }
       },
-      success_url: `${siteUrl}/dashboard?billing=success`,
+      success_url: `${siteUrl}/signin?billing=success&next=/dashboard`,
       cancel_url: `${siteUrl}/signup?plan=${plan}&billing=cancelled`
     });
 
