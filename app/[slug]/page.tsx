@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { BRAND_NAME } from "@/lib/brand";
 import { getPublicProfileBySlug } from "@/lib/data";
 import { hasSupabasePublicEnv } from "@/lib/env";
+import { getProfilePhotoUrl } from "@/lib/storage";
 import { formatDateRange, toVCard } from "@/lib/utils";
 
 type ContactPageProps = {
@@ -25,6 +26,13 @@ export default async function ContactPage({ params }: ContactPageProps) {
   }
 
   const { profile, featuredEvent } = data;
+  const profilePhotoUrl = getProfilePhotoUrl(profile.profile_photo_path);
+  const socialLinks = [
+    { label: "LinkedIn", href: profile.linkedin_url },
+    { label: "Instagram", href: profile.instagram_url },
+    { label: "Facebook", href: profile.facebook_url },
+    { label: "X", href: profile.x_url }
+  ].filter((entry): entry is { label: string; href: string } => Boolean(entry.href));
   const vcardHref = `data:text/vcard;charset=utf-8,${encodeURIComponent(
     toVCard({
       full_name: profile.full_name,
@@ -40,8 +48,19 @@ export default async function ContactPage({ params }: ContactPageProps) {
     <main className="public-shell">
       <section className="public-card">
         <div className="section-eyebrow">{BRAND_NAME} contact page</div>
-        <h1>{profile.full_name || profile.company_name || "Contact page"}</h1>
-        <p className="lead">{profile.contact_headline || profile.job_title || profile.company_name || "Stay connected."}</p>
+        <div className="public-identity">
+          {profilePhotoUrl ? (
+            <img alt={`${profile.full_name || profile.company_name || "Profile"} photo`} className="public-profile-photo" src={profilePhotoUrl} />
+          ) : (
+            <div className="public-profile-fallback">
+              {(profile.full_name || profile.company_name || "C").slice(0, 1)}
+            </div>
+          )}
+          <div className="public-identity__copy">
+            <h1>{profile.full_name || profile.company_name || "Contact page"}</h1>
+            <p className="lead">{profile.contact_headline || profile.job_title || profile.company_name || "Stay connected."}</p>
+          </div>
+        </div>
         {profile.bio ? <p className="public-copy">{profile.bio}</p> : null}
 
         <div className="public-actions">
@@ -52,6 +71,16 @@ export default async function ContactPage({ params }: ContactPageProps) {
           <a href={`mailto:${profile.email}`}>Email</a>
           {profile.website ? <a href={profile.website}>Website</a> : null}
         </div>
+
+        {socialLinks.length ? (
+          <div className="public-socials">
+            {socialLinks.map((entry) => (
+              <a href={entry.href} key={entry.label} rel="noreferrer" target="_blank">
+                {entry.label}
+              </a>
+            ))}
+          </div>
+        ) : null}
       </section>
 
       {featuredEvent ? (

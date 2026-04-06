@@ -766,6 +766,105 @@ button {
   margin-top: 20px;
 }
 
+.card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.card-tile {
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.76);
+  transition: border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.card-tile:hover {
+  transform: translateY(-1px);
+  border-color: rgba(31, 122, 89, 0.28);
+  box-shadow: 0 14px 28px rgba(27, 25, 20, 0.08);
+}
+
+.card-tile.is-active {
+  border-color: rgba(31, 122, 89, 0.4);
+  background: linear-gradient(135deg, rgba(31, 122, 89, 0.08), rgba(255, 255, 255, 0.92));
+}
+
+.card-tile__title,
+.card-tile__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.card-tile__title strong {
+  font-size: 1rem;
+}
+
+.card-tile__meta {
+  color: var(--muted);
+  font-size: 0.93rem;
+}
+
+.profile-photo-field {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: start;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  border: 1px solid rgba(27, 25, 20, 0.06);
+}
+
+.profile-photo-copy {
+  display: grid;
+  gap: 10px;
+}
+
+.profile-photo-preview,
+.public-profile-photo,
+.public-profile-fallback,
+.profile-photo-placeholder {
+  width: 112px;
+  height: 112px;
+  border-radius: 28px;
+}
+
+.profile-photo-preview,
+.public-profile-photo {
+  object-fit: cover;
+  border: 1px solid rgba(27, 25, 20, 0.08);
+  background: #fff;
+}
+
+.profile-photo-placeholder,
+.public-profile-fallback {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 14px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(31, 122, 89, 0.14), rgba(255, 255, 255, 0.95));
+  border: 1px solid rgba(31, 122, 89, 0.14);
+  color: var(--accent-dark);
+}
+
+.profile-photo-placeholder strong,
+.public-profile-fallback {
+  font-size: 2rem;
+  font-weight: 800;
+}
+
+.profile-photo-placeholder span {
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
 .link-tile strong {
   display: block;
   margin-bottom: 6px;
@@ -836,8 +935,25 @@ button {
   max-width: 760px;
 }
 
+.public-identity {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 18px;
+  align-items: center;
+}
+
+.public-identity__copy {
+  display: grid;
+  gap: 8px;
+}
+
+.public-identity__copy .lead {
+  margin: 0;
+}
+
 .public-actions,
-.wallet-actions {
+.wallet-actions,
+.public-socials {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
@@ -845,7 +961,8 @@ button {
 }
 
 .public-actions a,
-.wallet-actions a {
+.wallet-actions a,
+.public-socials a {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -858,6 +975,13 @@ button {
 
 .wallet-actions a {
   background: rgba(31, 122, 89, 0.12);
+}
+
+.public-socials a {
+  min-height: 42px;
+  font-size: 0.95rem;
+  background: rgba(31, 122, 89, 0.09);
+  color: var(--accent-dark);
 }
 
 .sub-grid {
@@ -896,6 +1020,11 @@ button {
     width: 100%;
     justify-content: center;
     flex-wrap: wrap;
+  }
+
+  .profile-photo-field,
+  .public-identity {
+    grid-template-columns: 1fr;
   }
 
   .hero {

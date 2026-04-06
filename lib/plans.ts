@@ -79,6 +79,18 @@ export function hasActiveAccess(status?: string | null) {
   return status === "active" || status === "trialing";
 }
 
+export function getCardLimit(planId?: string | null) {
+  if (planId === "pro") {
+    return 3;
+  }
+
+  if (planId === "enterprise") {
+    return 5000;
+  }
+
+  return 1;
+}
+
 export function planFromPriceId(priceId?: string | null): PlanId | null {
   if (!priceId) {
     return null;

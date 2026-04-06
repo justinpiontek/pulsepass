@@ -1,6 +1,6 @@
 import { createSign } from "crypto";
 
-import type { ProfileRecord } from "@/lib/data";
+import type { CardRecord } from "@/lib/data";
 import { BRAND_NAME } from "@/lib/brand";
 import { getGoogleWalletEnv, getSiteUrl } from "@/lib/env";
 
@@ -44,7 +44,7 @@ function localizedString(value: string) {
   };
 }
 
-function objectIdFragment(profile: ProfileRecord) {
+function objectIdFragment(profile: CardRecord) {
   const safeSlug = (profile.slug || "member").replace(/[^a-zA-Z0-9._-]+/g, "-").replace(/^-+|-+$/g, "");
   const shortId = profile.id.replace(/-/g, "").slice(0, 10);
   return `contact-${safeSlug}-${shortId}`.slice(0, 60);
@@ -71,7 +71,7 @@ function linkModule(uri: string, description: string) {
 
 export function createGoogleWalletSaveUrl(options: {
   contactUrl: string;
-  profile: ProfileRecord;
+  profile: CardRecord;
 }) {
   const env = getGoogleWalletEnv();
   const origin = new URL(getSiteUrl()).origin;

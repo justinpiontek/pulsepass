@@ -35,13 +35,14 @@ This workspace now contains two layers:
 1. Copy `.env.example` to `.env`
 2. Create a Supabase project
 3. Run the SQL in `supabase/migrations/202604040001_init.sql`
-4. Create Stripe products and recurring prices for Starter and Pro
-5. Add the Stripe price IDs and webhook secret to `.env`
-6. Optional: add `STRIPE_STARTER_PAYMENT_LINK_URL` and `STRIPE_PRO_PAYMENT_LINK_URL` if you want Stripe-hosted Payment Links instead of creating Checkout Sessions in-app
-7. If you use Payment Links, configure promotion codes, collected names, and the post-payment redirect inside Stripe
-8. Add Google Wallet issuer credentials if you want Android "Add to Wallet"
-9. Install dependencies with `npm install`
-10. Start the app with `npm run dev`
+4. Run the later SQL migrations too, including `supabase/migrations/202604060001_profile_socials_and_photos.sql`
+5. Create Stripe products and recurring prices for Starter and Pro
+6. Add the Stripe price IDs and webhook secret to `.env`
+7. Optional: add `STRIPE_STARTER_PAYMENT_LINK_URL` and `STRIPE_PRO_PAYMENT_LINK_URL` if you want Stripe-hosted Payment Links instead of creating Checkout Sessions in-app
+8. If you use Payment Links, configure promotion codes, collected names, and the post-payment redirect inside Stripe
+9. Add Google Wallet issuer credentials if you want Android "Add to Wallet"
+10. Install dependencies with `npm install`
+11. Start the app with `npm run dev`
 
 ## Suggested launch order
 
@@ -58,4 +59,5 @@ This workspace now contains two layers:
 - Google Wallet can be generated in-app when issuer credentials are configured
 - Apple Wallet still needs a signed `.pkpass` URL or pass service
 - Stripe Payment Links can collect full name and business name, allow promotion codes, and still activate LinxPass accounts through the webhook when the link includes `client_reference_id`
+- Profile photos upload to the public `profile-photos` Supabase Storage bucket created by the photo migration
 - The current webhook handler is production-shaped, but you still need live Stripe price IDs and webhook forwarding before billing goes end-to-end

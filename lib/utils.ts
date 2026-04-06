@@ -20,6 +20,24 @@ export function absoluteUrl(path: string) {
   return new URL(path, getSiteUrl()).toString();
 }
 
+export function normalizeExternalUrl(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const trimmed = value.trim();
+
+  if (!trimmed) {
+    return null;
+  }
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `https://${trimmed}`;
+}
+
 export function formatDateRange(startsAt?: string | null, endsAt?: string | null, timeZone = "America/Chicago") {
   if (!startsAt) {
     return "Date coming soon";
