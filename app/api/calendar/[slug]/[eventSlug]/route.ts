@@ -1,0 +1,35 @@
+import { NextResponse } from "next/server";
+
+import { getPublishedEventBySlugs } from "@/lib/data";
+import { hasSupabasePublicEnv } from "@/lib/env";
+import { toCalendarFile } from "@/lib/utils";
+
+type CalendarRouteContext = {
+  params: Promise<{
+    eventSlug: string;
+    slug: string;
+  }>;
+};
+
+export async function GET(_request: Request, context: CalendarRouteContext) {
+  if (!hasSupabasePublicEnv()) {
+    return NextResponse.json({ error: "Calendar export is not configured." }, { status: 404 });
+  }
+
+  const { slug, eventSlug } = await context.params;
+  const data = await getPublishedEventBySlugs(slug, eventSlug);
+
+  if (!data) {
+    return NextResponse.json({ error: "Published event not found." }, { status: 404 });
+  }
+
+  const ics = toCalendarFile(data.event, data.profile.full_name || data.profile.company_name);
+
+  return new NextResponse(ics, {
+    headers: {
+      "cache-control": "private, no-store",
+      "content-disposition": `inline; filename="${data.event.slug}.ics"`,
+      "content-type": "text/calendar; charset=utf-8"
+    }
+  });
+}

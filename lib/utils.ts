@@ -124,3 +124,33 @@ export function toCalendarFile(event: {
     .filter(Boolean)
     .join("\r\n");
 }
+
+function toCalendarTimestamp(value: string) {
+  return new Date(value).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+export function buildGoogleCalendarUrl(event: {
+  title?: string | null;
+  summary?: string | null;
+  location?: string | null;
+  starts_at?: string | null;
+  ends_at?: string | null;
+}) {
+  const start = event.starts_at ? new Date(event.starts_at) : new Date();
+  const end = event.ends_at ? new Date(event.ends_at) : new Date(start.getTime() + 60 * 60 * 1000);
+  const url = new URL("https://calendar.google.com/calendar/render");
+
+  url.searchParams.set("action", "TEMPLATE");
+  url.searchParams.set("text", event.title || `${BRAND_NAME} event`);
+  url.searchParams.set("dates", `${toCalendarTimestamp(start.toISOString())}/${toCalendarTimestamp(end.toISOString())}`);
+
+  if (event.summary) {
+    url.searchParams.set("details", event.summary);
+  }
+
+  if (event.location) {
+    url.searchParams.set("location", event.location);
+  }
+
+  return url.toString();
+}

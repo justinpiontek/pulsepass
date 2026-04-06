@@ -1,10 +1,11 @@
 import { redirect, notFound } from "next/navigation";
 
+import { CalendarActionLink } from "@/components/calendar-action-link";
 import { BRAND_NAME } from "@/lib/brand";
 import { countEventRsvps, getPublishedEventBySlugs } from "@/lib/data";
 import { hasSupabasePublicEnv } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { formatDateRange, toCalendarFile } from "@/lib/utils";
+import { absoluteUrl, buildGoogleCalendarUrl, formatDateRange } from "@/lib/utils";
 
 type EventPageProps = {
   params: Promise<{
@@ -32,9 +33,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const { profile, event } = data;
   const rsvpTotal = await countEventRsvps(event.id);
   const remaining = typeof event.capacity === "number" ? Math.max(event.capacity - rsvpTotal, 0) : null;
-  const icsHref = `data:text/calendar;charset=utf-8,${encodeURIComponent(
-    toCalendarFile(event, profile.full_name || profile.company_name)
-  )}`;
+  const icsHref = absoluteUrl(`/api/calendar/${slug}/${eventSlug}`);
+  const googleCalendarUrl = buildGoogleCalendarUrl(event);
 
   async function rsvpAction(formData: FormData) {
     "use server";
@@ -89,8 +89,9 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         {event.summary ? <p className="public-copy">{event.summary}</p> : null}
 
         <div className="public-actions">
-          <a download={`${event.slug}.ics`} href={icsHref}>
-            Add to calendar
+          <CalendarActionLink className="primary-button" googleCalendarUrl={googleCalendarUrl} icsUrl={icsHref} />
+          <a className="ghost-button" href={icsHref}>
+            Download .ics
           </a>
           <a href={`/${profile.slug}`}>Back to contact page</a>
           <a href={`mailto:${profile.email}`}>Email host</a>
