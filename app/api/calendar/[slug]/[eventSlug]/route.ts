@@ -23,13 +23,16 @@ export async function GET(_request: Request, context: CalendarRouteContext) {
     return NextResponse.json({ error: "Published event not found." }, { status: 404 });
   }
 
-  const ics = toCalendarFile(data.event, data.profile.full_name || data.profile.company_name);
+  const ics = toCalendarFile(data.event, {
+    email: data.profile.email,
+    name: data.profile.full_name || data.profile.company_name
+  });
 
   return new NextResponse(ics, {
     headers: {
       "cache-control": "private, no-store",
-      "content-disposition": `inline; filename="${data.event.slug}.ics"`,
-      "content-type": "text/calendar; charset=utf-8"
+      "content-disposition": `attachment; filename="${data.event.slug}.ics"`,
+      "content-type": "text/calendar; charset=utf-8; method=PUBLISH"
     }
   });
 }

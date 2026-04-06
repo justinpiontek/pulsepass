@@ -1114,7 +1114,7 @@ button {
   margin-top: 24px;
 }
 
-.public-actions a,
+.public-actions a:not(.primary-button):not(.ghost-button),
 .wallet-actions a,
 .public-socials a {
   display: inline-flex;
@@ -1125,6 +1125,24 @@ button {
   border-radius: 999px;
   background: rgba(27, 25, 20, 0.06);
   font-weight: 700;
+}
+
+.public-actions .primary-button,
+.public-actions .ghost-button {
+  min-height: 48px;
+  padding: 0 18px;
+}
+
+.public-actions .calendar-link--apple {
+  background: #111111;
+  border-color: #111111;
+  box-shadow: 0 14px 30px rgba(17, 17, 17, 0.16);
+  color: #ffffff;
+}
+
+.public-actions .calendar-link--apple:hover {
+  background: #000000;
+  border-color: #000000;
 }
 
 .wallet-actions a {

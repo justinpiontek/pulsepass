@@ -89,8 +89,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         {event.summary ? <p className="public-copy">{event.summary}</p> : null}
 
         <div className="public-actions">
-          <a className="primary-button" href={appleCalendarHref}>
-            Apple Calendar
+          <a className="primary-button calendar-link--apple" href={appleCalendarHref}>
+            Open in Apple Calendar
           </a>
           <a className="ghost-button" href={googleCalendarUrl} rel="noreferrer" target="_blank">
             Google Calendar

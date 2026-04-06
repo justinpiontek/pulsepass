@@ -97,27 +97,35 @@ export function toCalendarFile(event: {
   location?: string | null;
   starts_at?: string | null;
   ends_at?: string | null;
-}, hostName?: string | null) {
+}, host?: {
+  email?: string | null;
+  name?: string | null;
+}) {
   const uid = `${slugify(event.title || "event")}-${Date.now()}@${BRAND_SLUG}`;
   const start = event.starts_at ? new Date(event.starts_at) : new Date();
   const end = event.ends_at ? new Date(event.ends_at) : new Date(start.getTime() + 60 * 60 * 1000);
   const dtStamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
   const dtStart = start.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
   const dtEnd = end.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+  const hostName = host?.name?.trim();
+  const hostEmail = host?.email?.trim();
 
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     `PRODID:-//${BRAND_NAME}//EN`,
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTAMP:${dtStamp}`,
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,
+    "STATUS:CONFIRMED",
     `SUMMARY:${escapeIcsValue(event.title || `${BRAND_NAME} event`)}`,
     `DESCRIPTION:${escapeIcsValue(event.summary || "")}`,
     `LOCATION:${escapeIcsValue(event.location || "")}`,
-    hostName ? `ORGANIZER;CN=${escapeIcsValue(hostName)}:MAILTO:` : "",
+    hostEmail ? `ORGANIZER${hostName ? `;CN=${escapeIcsValue(hostName)}` : ""}:mailto:${hostEmail}` : "",
     "END:VEVENT",
     "END:VCALENDAR"
   ]
