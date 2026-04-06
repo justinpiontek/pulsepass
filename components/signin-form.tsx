@@ -79,8 +79,9 @@ export function SigninForm({
         });
 
         if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { error?: string } | null;
           await supabase.auth.signOut();
-          throw new Error("You are signed in, but checkout could not be started.");
+          throw new Error(payload?.error || "You are signed in, but checkout could not be started.");
         }
 
         const payload = (await response.json()) as { url: string };

@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { hasSupabasePublicEnv } from "@/lib/env";
@@ -31,7 +30,6 @@ function accountAlreadyExists(message: string) {
 }
 
 export function SignupForm({ initialPlan }: SignupFormProps) {
-  const router = useRouter();
   const [plan, setPlan] = useState<PlanId>(initialPlan);
   const [isPending, startTransition] = useTransition();
   const [errorMessage, setErrorMessage] = useState("");
@@ -63,6 +61,51 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
     });
   }
 
+  async function startCheckout(options: { email: string; name?: string; userId?: string | null }) {
+    const response = await fetch("/api/checkout/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        plan,
+        email: options.email,
+        name: options.name || "",
+        userId: options.userId ?? null
+      })
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      throw new Error(payload?.error || "We could not start checkout.");
+    }
+
+    const payload = (await response.json()) as { url: string };
+    return payload.url;
+  }
+
+  async function resumeExistingAccountCheckout() {
+    const supabase = createSupabaseBrowserClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password
+    });
+
+    if (error || !data.user) {
+      await supabase.auth.signOut();
+      throw new Error("That email already has an account. Enter the original password to continue checkout.");
+    }
+
+    const checkoutUrl = await startCheckout({
+      email: form.email,
+      name: form.fullName,
+      userId: data.user.id
+    });
+
+    await supabase.auth.signOut();
+    window.location.assign(checkoutUrl);
+  }
+
   async function submitSignup() {
     let createdUserId: string | null = null;
 
@@ -89,33 +132,31 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
 
       createdUserId = data.user?.id ?? null;
       await supabase.auth.signOut();
-
-      const response = await fetch("/api/checkout/session", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          plan,
-          email: form.email,
-          name: form.fullName,
-          userId: createdUserId
-        })
+      const checkoutUrl = await startCheckout({
+        email: form.email,
+        name: form.fullName,
+        userId: createdUserId
       });
-
-      if (!response.ok) {
-        const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(payload?.error || "We could not start checkout.");
-      }
-
-      const payload = (await response.json()) as { url: string };
-      window.location.assign(payload.url);
+      window.location.assign(checkoutUrl);
     } catch (error) {
       const message = error instanceof Error ? error.message : "We could not create your account.";
 
-      if (createdUserId || accountAlreadyExists(message)) {
-        setInfoMessage("Your login is already set up. Sign in and finish checkout to activate your account.");
-        router.push(`/signin?checkout=${plan}&email=${encodeURIComponent(form.email)}`);
+      if (accountAlreadyExists(message)) {
+        try {
+          await resumeExistingAccountCheckout();
+          return;
+        } catch (resumeError) {
+          setErrorMessage(
+            resumeError instanceof Error ? resumeError.message : "We could not continue checkout for that account."
+          );
+          setInfoMessage("If you already have a paid account, sign in with that password. Otherwise resume checkout here.");
+          return;
+        }
+      }
+
+      if (createdUserId) {
+        setErrorMessage(message);
+        setInfoMessage("Your login was created, but checkout did not open. Try again or sign in to resume payment.");
         return;
       }
 

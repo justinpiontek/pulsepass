@@ -254,24 +254,24 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <textarea defaultValue={profile?.bio || ""} name="bio" />
             </label>
             <label>
-              Apple Wallet pass URL
+              Apple Wallet QR pass URL
               <input defaultValue={profile?.wallet_apple_url || ""} name="wallet_apple_url" type="url" />
             </label>
             <label>
-              Google Wallet override URL
+              Google Wallet QR pass override URL
               <input defaultValue={profile?.wallet_google_url || ""} name="wallet_google_url" type="url" />
             </label>
             <p className="micro-copy">
-              Android can use an auto-generated Google Wallet pass when your issuer keys are connected. Apple
-              Wallet still needs a signed Apple pass URL or pass service.
+              These wallet passes are for you to carry your QR at events. People scan your QR, then land on
+              your contact page and tap Save contact.
             </p>
             <div className="dashboard-links">
               <div className="link-tile">
                 <strong>Google Wallet status</strong>
                 <span className="micro-copy">
                   {googleWalletIsReady
-                    ? "Android visitors can use Add to Wallet from your live page."
-                    : "Add Google Wallet issuer credentials in your environment to turn on Add to Wallet for Android."}
+                    ? "Your Android QR pass can be added from the dashboard once your contact page is live."
+                    : "Add Google Wallet issuer credentials in your environment to turn on your Android QR pass."}
                 </span>
                 {googleWalletPreviewUrl ? <code>{googleWalletPreviewUrl}</code> : null}
               </div>
@@ -279,8 +279,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 <strong>Apple Wallet status</strong>
                 <span className="micro-copy">
                   {profile?.wallet_apple_url
-                    ? "Your Apple Wallet pass URL is connected."
-                    : "Apple Wallet still needs a signed .pkpass link before iPhone visitors can add this QR to Wallet."}
+                    ? "Your Apple Wallet QR pass URL is connected."
+                    : "Apple Wallet still needs a signed .pkpass link before you can carry this QR in Wallet on iPhone."}
                 </span>
               </div>
             </div>
@@ -312,7 +312,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <div className="panel-header">
             <div>
               <div className="section-eyebrow">Main QR</div>
-              <h2>One code for both flows</h2>
+              <h2>Carry this QR anywhere</h2>
             </div>
           </div>
 
@@ -323,7 +323,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <p className="micro-copy">Publish your contact page to generate the live QR destination.</p>
             )}
             <p className="micro-copy">
-              Keep this QR on business cards, signs, or print. When an event is published on Pro, people can reach it from the same scan flow.
+              Use this on printed cards if you want, or keep it on your phone. At events, open your wallet pass
+              or this screen and let people scan. They land on your contact page and can save your info right away.
             </p>
             {contactUrl ? (
               <div className="button-row qr-actions">
@@ -333,6 +334,26 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 <a className="ghost-button" download href={qrDownloadSvgUrl || undefined}>
                   Download SVG
                 </a>
+              </div>
+            ) : null}
+            {contactUrl ? (
+              <div className="button-row qr-actions">
+                {googleWalletPreviewUrl ? (
+                  <a className="primary-button" href={googleWalletPreviewUrl}>
+                    Add to Google Wallet
+                  </a>
+                ) : (
+                  <span className="micro-copy">
+                    Add Google Wallet credentials to turn on your Android wallet pass.
+                  </span>
+                )}
+                {profile?.wallet_apple_url ? (
+                  <a className="ghost-button" href={profile.wallet_apple_url}>
+                    Add to Apple Wallet
+                  </a>
+                ) : (
+                  <span className="micro-copy">Connect your Apple Wallet pass URL above to carry this QR on iPhone.</span>
+                )}
               </div>
             ) : null}
           </div>

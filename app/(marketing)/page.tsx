@@ -31,10 +31,10 @@ export default function HomePage() {
           <div className="hero-grid">
             <div className="hero-copy">
               <div className="eyebrow">One live QR for your business card and events</div>
-              <h1>Share your contact page. Add events when you need them.</h1>
+              <h1>Keep your QR on your phone. Let people scan and save your info.</h1>
               <p className="lead">
-                Publish a digital contact page, keep one QR live, and add an event page without reprinting
-                the code.
+                Publish a digital contact page, carry your QR in Apple Wallet or Google Wallet, and add an
+                event page without reprinting anything.
               </p>
               <div className="hero-actions">
                 <Link className="primary-button" href="/signup?plan=pro">
@@ -50,32 +50,74 @@ export default function HomePage() {
                   <span>Keep the same code live while you update the page behind it.</span>
                 </div>
                 <div className="metric">
-                  <strong>2 page types</strong>
-                  <span>Contact page first, event page when you need RSVP and calendar actions.</span>
+                  <strong>Wallet-ready</strong>
+                  <span>Open your QR on your phone at events instead of carrying printed cards.</span>
                 </div>
                 <div className="metric">
-                  <strong>0 guesswork</strong>
-                  <span>Signup, checkout, publish, and share without a confusing setup flow.</span>
+                  <strong>Save contact fast</strong>
+                  <span>People scan once, land on your page, and save your info right away.</span>
                 </div>
               </div>
             </div>
 
-            <aside className="hero-card">
-              <div className="section-eyebrow">What people get after the scan</div>
-              <div className="feature-grid">
-                <article className="feature-card">
-                  <strong>Contact page</strong>
-                  <p className="micro-copy">Phone, email, website, save contact, and wallet links in one place.</p>
-                </article>
-                <article className="feature-card">
-                  <strong>Event page</strong>
-                  <p className="micro-copy">RSVP, location, date, and add-to-calendar from that same scan flow.</p>
-                </article>
-                <article className="feature-card">
-                  <strong>Always updateable</strong>
-                  <p className="micro-copy">Change your details later without replacing the printed QR.</p>
-                </article>
+            <aside className="hero-card hero-preview">
+              <div className="section-eyebrow">What people see after the scan</div>
+              <div className="hero-preview__flow">
+                <div className="wallet-pass-chip">
+                  <strong>Your QR in Wallet</strong>
+                  <span>Pull it up at an event and let them scan.</span>
+                </div>
               </div>
+              <div className="phone-preview" aria-label="Example scanned contact page preview">
+                <div className="phone-preview__status">
+                  <span>9:41</span>
+                  <span>5G</span>
+                </div>
+                <div className="contact-preview">
+                  <div className="contact-preview__avatar">JL</div>
+                  <div className="contact-preview__identity">
+                    <strong>Jordan Lee</strong>
+                    <span>Partnerships Director</span>
+                    <span>Northline Studio</span>
+                  </div>
+
+                  <p className="contact-preview__headline">
+                    Scan once to call, email, save my contact, or open the current event page.
+                  </p>
+
+                  <div className="contact-preview__actions">
+                    <span>Save contact</span>
+                    <span>Call</span>
+                    <span>Email</span>
+                    <span>Website</span>
+                  </div>
+
+                  <div className="contact-preview__details">
+                    <div>
+                      <strong>(312) 555-0184</strong>
+                      <span>Direct line</span>
+                    </div>
+                    <div>
+                      <strong>northlinestudio.com</strong>
+                      <span>Website</span>
+                    </div>
+                  </div>
+
+                  <div className="contact-preview__event">
+                    <div className="contact-preview__event-label">Linked event</div>
+                    <strong>Spring Open House</strong>
+                    <span>April 24, 6:30 PM at West Loop Gallery</span>
+                    <div className="contact-preview__event-actions">
+                      <span>RSVP</span>
+                      <span>Add to calendar</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p className="micro-copy hero-preview__note">
+                You carry the QR. They land on the contact page. If you publish an event, it appears right on
+                that same scan flow.
+              </p>
             </aside>
           </div>
         </section>
@@ -97,8 +139,8 @@ export default function HomePage() {
               <p className="micro-copy">Add your contact details and publish your live contact route.</p>
             </article>
             <article className="feature-card">
-              <strong>3. Share one QR</strong>
-              <p className="micro-copy">Use that same QR on cards, signs, booths, or print. Add an event later if you want.</p>
+              <strong>3. Open your QR at events</strong>
+              <p className="micro-copy">Keep it in Wallet or on your phone screen, then let people scan and save your contact.</p>
             </article>
           </div>
         </section>

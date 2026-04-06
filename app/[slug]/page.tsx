@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
 import { BRAND_NAME } from "@/lib/brand";
 import { getPublicProfileBySlug } from "@/lib/data";
-import { hasGoogleWalletEnv, hasSupabasePublicEnv } from "@/lib/env";
-import { absoluteUrl, formatDateRange, toVCard } from "@/lib/utils";
+import { hasSupabasePublicEnv } from "@/lib/env";
+import { formatDateRange, toVCard } from "@/lib/utils";
 
 type ContactPageProps = {
   params: Promise<{
@@ -13,37 +12,11 @@ type ContactPageProps = {
   }>;
 };
 
-function resolveWalletHref(options: {
-  appleUrl?: string | null;
-  googleUrl?: string | null;
-  userAgent: string;
-}) {
-  const userAgent = options.userAgent || "";
-  const isAppleDevice = /iPhone|iPad|iPod/i.test(userAgent);
-  const isAndroidDevice = /Android/i.test(userAgent);
-
-  if (isAppleDevice && options.appleUrl) {
-    return options.appleUrl;
-  }
-
-  if (isAppleDevice) {
-    return null;
-  }
-
-  if (isAndroidDevice && options.googleUrl) {
-    return options.googleUrl;
-  }
-
-  return options.appleUrl || options.googleUrl || null;
-}
-
 export default async function ContactPage({ params }: ContactPageProps) {
   if (!hasSupabasePublicEnv()) {
     notFound();
   }
 
-  const headerStore = await headers();
-  const userAgent = headerStore.get("user-agent") || "";
   const { slug } = await params;
   const data = await getPublicProfileBySlug(slug);
 
@@ -52,7 +25,6 @@ export default async function ContactPage({ params }: ContactPageProps) {
   }
 
   const { profile, featuredEvent } = data;
-  const generatedGoogleWalletUrl = hasGoogleWalletEnv() ? absoluteUrl(`/api/wallet/google/${profile.slug}`) : null;
   const vcardHref = `data:text/vcard;charset=utf-8,${encodeURIComponent(
     toVCard({
       full_name: profile.full_name,
@@ -63,11 +35,6 @@ export default async function ContactPage({ params }: ContactPageProps) {
       website: profile.website
     })
   )}`;
-  const walletHref = resolveWalletHref({
-    appleUrl: profile.wallet_apple_url,
-    googleUrl: profile.wallet_google_url || generatedGoogleWalletUrl,
-    userAgent
-  });
 
   return (
     <main className="public-shell">
@@ -78,19 +45,13 @@ export default async function ContactPage({ params }: ContactPageProps) {
         {profile.bio ? <p className="public-copy">{profile.bio}</p> : null}
 
         <div className="public-actions">
-          {profile.phone ? <a href={`tel:${profile.phone}`}>Call</a> : null}
-          <a href={`mailto:${profile.email}`}>Email</a>
-          {profile.website ? <a href={profile.website}>Website</a> : null}
           <a download={`${profile.slug}.vcf`} href={vcardHref}>
             Save contact
           </a>
+          {profile.phone ? <a href={`tel:${profile.phone}`}>Call</a> : null}
+          <a href={`mailto:${profile.email}`}>Email</a>
+          {profile.website ? <a href={profile.website}>Website</a> : null}
         </div>
-
-        {walletHref ? (
-          <div className="wallet-actions">
-            <a href={walletHref}>Add to Wallet</a>
-          </div>
-        ) : null}
       </section>
 
       {featuredEvent ? (
