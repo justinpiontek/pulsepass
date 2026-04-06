@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { SubmitButton } from "@/components/submit-button";
 import { BRAND_NAME } from "@/lib/brand";
 import { hasSupabasePublicEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -44,9 +45,7 @@ export async function PublicNav() {
                 Dashboard
               </Link>
               <form action={signOutAction}>
-                <button className="ghost-button" type="submit">
-                  Sign out
-                </button>
+                <SubmitButton className="ghost-button" idleLabel="Sign out" pendingLabel="Signing out..." />
               </form>
             </>
           ) : (

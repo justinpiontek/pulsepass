@@ -113,7 +113,15 @@ button {
   border-radius: 999px;
   border: 1px solid transparent;
   font-weight: 700;
-  transition: 160ms ease;
+  gap: 10px;
+  transition:
+    transform 120ms ease,
+    background-color 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    opacity 160ms ease,
+    color 160ms ease;
+  will-change: transform;
 }
 
 .primary-button {
@@ -124,6 +132,7 @@ button {
 
 .primary-button:hover {
   background: var(--accent-dark);
+  transform: translateY(-1px);
 }
 
 .ghost-button {
@@ -133,6 +142,58 @@ button {
 
 .ghost-button:hover {
   background: rgba(27, 25, 20, 0.04);
+  transform: translateY(-1px);
+}
+
+.primary-button:active,
+.ghost-button:active {
+  transform: translateY(1px) scale(0.985);
+}
+
+.primary-button:focus-visible,
+.ghost-button:focus-visible {
+  outline: none;
+  box-shadow:
+    0 0 0 3px rgba(31, 122, 89, 0.16),
+    0 14px 30px rgba(31, 122, 89, 0.12);
+}
+
+.primary-button:disabled,
+.ghost-button:disabled,
+.primary-button[aria-busy="true"],
+.ghost-button[aria-busy="true"] {
+  cursor: progress;
+  transform: none;
+  opacity: 0.8;
+}
+
+.button-label {
+  display: inline-flex;
+  align-items: center;
+}
+
+.button-spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: button-spin 700ms linear infinite;
+}
+
+.primary-button.is-pending,
+.ghost-button.is-pending {
+  pointer-events: none;
+}
+
+.ghost-button.is-pending {
+  background: rgba(27, 25, 20, 0.05);
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .full-width {

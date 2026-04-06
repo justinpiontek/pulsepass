@@ -8,6 +8,7 @@ import {
   toggleCardPublishAction,
   toggleEventPublishAction
 } from "@/app/(app)/dashboard/actions";
+import { SubmitButton } from "@/components/submit-button";
 import { BRAND_NAME } from "@/lib/brand";
 import { getDashboardData } from "@/lib/data";
 import { hasGoogleWalletEnv, hasSupabasePublicEnv } from "@/lib/env";
@@ -171,9 +172,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </Link>
           ) : null}
           <form action={signOutAction}>
-            <button className="ghost-button" type="submit">
-              Sign out
-            </button>
+            <SubmitButton className="ghost-button" idleLabel="Sign out" pendingLabel="Signing out..." />
           </form>
         </div>
       </div>
@@ -277,16 +276,17 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
           <div className="button-row">
             <form action={createCardAction}>
-              <button className="primary-button" disabled={!canCreateCard} type="submit">
-                {canCreateCard ? "Create another card" : "Card limit reached"}
-              </button>
+              <SubmitButton
+                className="primary-button"
+                disabled={!canCreateCard}
+                idleLabel={canCreateCard ? "Create another card" : "Card limit reached"}
+                pendingLabel="Creating card..."
+              />
             </form>
             {!canCreateCard && plan.id !== "pro" ? (
               <form action="/api/checkout/session" method="post">
                 <input name="plan" type="hidden" value="pro" />
-                <button className="ghost-button" type="submit">
-                  Upgrade to Pro
-                </button>
+                <SubmitButton className="ghost-button" idleLabel="Upgrade to Pro" pendingLabel="Opening checkout..." />
               </form>
             ) : null}
           </div>
@@ -444,9 +444,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                     </span>
                   </div>
                 </div>
-                <button className="primary-button full-width" type="submit">
-                  Save card
-                </button>
+                <SubmitButton className="primary-button full-width" idleLabel="Save card" pendingLabel="Saving card..." />
               </form>
             </section>
 
@@ -470,9 +468,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 <form action={toggleCardPublishAction} className="button-row">
                   <input name="card_id" type="hidden" value={selectedCard.id} />
                   <input name="next" type="hidden" value={selectedCard.contact_published ? "false" : "true"} />
-                  <button className="primary-button" type="submit">
-                    {selectedCard.contact_published ? "Unpublish card" : "Publish card"}
-                  </button>
+                  <SubmitButton
+                    className="primary-button"
+                    idleLabel={selectedCard.contact_published ? "Unpublish card" : "Publish card"}
+                    pendingLabel={selectedCard.contact_published ? "Unpublishing..." : "Publishing..."}
+                  />
                 </form>
               </div>
 
@@ -570,18 +570,22 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   <input defaultChecked={event?.rsvp_enabled ?? true} name="rsvp_enabled" type="checkbox" />
                   <span>Allow RSVP on this event page</span>
                 </label>
-                <button className="primary-button full-width" type="submit">
-                  Save event page
-                </button>
+                <SubmitButton
+                  className="primary-button full-width"
+                  idleLabel="Save event page"
+                  pendingLabel="Saving event..."
+                />
               </form>
 
               <form action={toggleEventPublishAction} className="button-row">
                 <input name="card_id" type="hidden" value={selectedCard.id} />
                 <input name="event_id" type="hidden" value={event?.id || ""} />
                 <input name="next" type="hidden" value={event?.published ? "false" : "true"} />
-                <button className="ghost-button" type="submit">
-                  {event?.published ? "Unpublish event page" : "Publish event page"}
-                </button>
+                <SubmitButton
+                  className="ghost-button"
+                  idleLabel={event?.published ? "Unpublish event page" : "Publish event page"}
+                  pendingLabel={event?.published ? "Unpublishing..." : "Publishing..."}
+                />
               </form>
 
                 <div className="dashboard-links">
@@ -603,9 +607,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   </p>
                   <form action="/api/checkout/session" className="button-row" method="post">
                     <input name="plan" type="hidden" value="pro" />
-                    <button className="ghost-button" type="submit">
-                      Upgrade to Pro
-                    </button>
+                    <SubmitButton className="ghost-button" idleLabel="Upgrade to Pro" pendingLabel="Opening checkout..." />
                   </form>
                 </div>
               )}
@@ -619,9 +621,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               Once you create a card, the rest of the dashboard becomes straightforward: edit the details, publish the card, then share the QR.
             </p>
             <form action={createCardAction} className="button-row">
-              <button className="primary-button" disabled={!canCreateCard} type="submit">
-                {canCreateCard ? "Create your first card" : "Card limit reached"}
-              </button>
+              <SubmitButton
+                className="primary-button"
+                disabled={!canCreateCard}
+                idleLabel={canCreateCard ? "Create your first card" : "Card limit reached"}
+                pendingLabel="Creating card..."
+              />
             </form>
           </section>
         )}
@@ -646,9 +651,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           {plan.id !== "pro" ? (
             <form action="/api/checkout/session" className="button-row" method="post">
               <input name="plan" type="hidden" value="pro" />
-              <button className="ghost-button" type="submit">
-                Upgrade this account to Pro
-              </button>
+              <SubmitButton
+                className="ghost-button"
+                idleLabel="Upgrade this account to Pro"
+                pendingLabel="Opening checkout..."
+              />
             </form>
           ) : null}
         </section>

@@ -1,3 +1,4 @@
+import { SubmitButton } from "@/components/submit-button";
 import { PublicNav } from "@/components/public-nav";
 import { BRAND_NAME } from "@/lib/brand";
 import { getSupportEmail } from "@/lib/env";
@@ -69,9 +70,7 @@ export default async function EnterprisePage({ searchParams }: EnterprisePagePro
                 Notes
                 <textarea name="notes" placeholder="Tell us how you want to roll this out." />
               </label>
-              <button className="primary-button full-width" type="submit">
-                Request pricing
-              </button>
+              <SubmitButton className="primary-button full-width" idleLabel="Request pricing" pendingLabel="Sending request..." />
             </form>
             <p className="micro-copy">
               Prefer email? <a href={`mailto:${getSupportEmail()}`}>{getSupportEmail()}</a>
