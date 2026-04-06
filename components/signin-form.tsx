@@ -25,20 +25,49 @@ export function SigninForm({
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
+  const [pendingCheckoutUserId, setPendingCheckoutUserId] = useState<string | null>(null);
   const canSubmit = hasSupabasePublicEnv();
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setErrorMessage("");
+    setInfoMessage("");
 
     startTransition(() => {
       void submitSignin();
     });
   }
 
+  async function beginCheckout(plan: "starter" | "pro", userId: string) {
+    const supabase = createSupabaseBrowserClient();
+    const response = await fetch("/api/checkout/session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        plan,
+        email,
+        userId
+      })
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      await supabase.auth.signOut();
+      throw new Error(payload?.error || "We could not start checkout.");
+    }
+
+    const payload = (await response.json()) as { url: string };
+    await supabase.auth.signOut();
+    window.location.assign(payload.url);
+  }
+
   async function submitSignin() {
     try {
       const supabase = createSupabaseBrowserClient();
+      setPendingCheckoutUserId(null);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
@@ -66,37 +95,19 @@ export function SigninForm({
       const accessIsActive = hasActiveAccess(subscription?.status);
 
       if (!accessIsActive && (checkoutPlan === "starter" || checkoutPlan === "pro")) {
-        const response = await fetch("/api/checkout/session", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            plan: checkoutPlan,
-            email,
-            userId: data.user.id
-          })
-        });
-
-        if (!response.ok) {
-          const payload = (await response.json().catch(() => null)) as { error?: string } | null;
-          await supabase.auth.signOut();
-          throw new Error(payload?.error || "You are signed in, but checkout could not be started.");
-        }
-
-        const payload = (await response.json()) as { url: string };
-        await supabase.auth.signOut();
-        window.location.assign(payload.url);
+        await beginCheckout(checkoutPlan, data.user.id);
         return;
       }
 
       if (!accessIsActive) {
-        await supabase.auth.signOut();
-        throw new Error(
-          billingState === "success"
-            ? "Payment was received. We are still finishing setup. Try signing in again in a moment."
-            : "Finish checkout before signing in. Choose Starter or Pro to activate your account."
-        );
+        if (billingState === "success") {
+          await supabase.auth.signOut();
+          throw new Error("Payment was received. We are still finishing setup. Try signing in again in a moment.");
+        }
+
+        setPendingCheckoutUserId(data.user.id);
+        setInfoMessage("Choose Starter or Pro below to finish checkout without signing in again.");
+        return;
       }
 
       router.push(nextPath);
@@ -134,11 +145,42 @@ export function SigninForm({
           {isPending ? "Checking account..." : checkoutPlan ? "Continue to secure checkout" : "Open dashboard"}
         </button>
       </form>
+      {pendingCheckoutUserId ? (
+        <div className="signup-inline-note">
+          <strong>Finish activation</strong>
+          <span>Pick the plan you want and we will take you straight to secure checkout.</span>
+          <div className="button-row">
+            <button
+              className="ghost-button"
+              onClick={() => {
+                startTransition(() => {
+                  void beginCheckout("starter", pendingCheckoutUserId);
+                });
+              }}
+              type="button"
+            >
+              Continue with Starter
+            </button>
+            <button
+              className="primary-button"
+              onClick={() => {
+                startTransition(() => {
+                  void beginCheckout("pro", pendingCheckoutUserId);
+                });
+              }}
+              type="button"
+            >
+              Continue with Pro
+            </button>
+          </div>
+        </div>
+      ) : null}
       {!canSubmit ? (
         <p className="status-message">
           Add your Supabase and Stripe keys in `.env`, then sign in here once the backend is connected.
         </p>
       ) : null}
+      {infoMessage ? <p className="status-message">{infoMessage}</p> : null}
       {errorMessage ? <p className="status-message error">{errorMessage}</p> : null}
     </section>
   );

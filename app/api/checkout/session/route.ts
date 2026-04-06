@@ -10,6 +10,7 @@ type CheckoutPayload = {
   email?: string;
   name?: string;
   plan?: string;
+  promoCode?: string;
   userId?: string | null;
 };
 
@@ -29,8 +30,31 @@ async function readPayload(request: Request): Promise<CheckoutPayload> {
     email: String(formData.get("email") || ""),
     name: String(formData.get("name") || ""),
     plan: String(formData.get("plan") || ""),
+    promoCode: String(formData.get("promoCode") || ""),
     userId: String(formData.get("userId") || "")
   };
+}
+
+function buildPaymentLinkUrl(
+  paymentLinkUrl: string,
+  options: {
+    email: string;
+    promoCode?: string;
+    userId?: string | null;
+  }
+) {
+  const url = new URL(paymentLinkUrl);
+  url.searchParams.set("prefilled_email", options.email);
+
+  if (options.userId) {
+    url.searchParams.set("client_reference_id", options.userId);
+  }
+
+  if (options.promoCode) {
+    url.searchParams.set("prefilled_promo_code", options.promoCode);
+  }
+
+  return url.toString();
 }
 
 export async function POST(request: Request) {
@@ -55,6 +79,26 @@ export async function POST(request: Request) {
 
     if (!email) {
       return NextResponse.json({ error: "An email address is required for checkout." }, { status: 400 });
+    }
+
+    const paymentLinkUrl =
+      plan === "starter" ? stripeEnv.STRIPE_STARTER_PAYMENT_LINK_URL : stripeEnv.STRIPE_PRO_PAYMENT_LINK_URL;
+
+    if (paymentLinkUrl) {
+      const redirectUrl = buildPaymentLinkUrl(paymentLinkUrl, {
+        email,
+        promoCode: payload.promoCode,
+        userId
+      });
+
+      if (isJsonRequest(request.headers.get("content-type"))) {
+        return NextResponse.json({
+          plan: (PLANS[plan as PlanId] || PLANS.starter).name,
+          url: redirectUrl
+        });
+      }
+
+      return NextResponse.redirect(redirectUrl);
     }
 
     const priceId = plan === "starter" ? stripeEnv.STRIPE_STARTER_PRICE_ID : stripeEnv.STRIPE_PRO_PRICE_ID;

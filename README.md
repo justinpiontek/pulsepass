@@ -15,6 +15,7 @@ This workspace now contains two layers:
 - Supabase auth foundation
 - Password reset flow
 - Stripe Checkout session endpoint
+- Optional Stripe Payment Link redirect support
 - Stripe webhook foundation
 - Database-backed dashboard
 - Public contact pages by slug
@@ -36,9 +37,11 @@ This workspace now contains two layers:
 3. Run the SQL in `supabase/migrations/202604040001_init.sql`
 4. Create Stripe products and recurring prices for Starter and Pro
 5. Add the Stripe price IDs and webhook secret to `.env`
-6. Add Google Wallet issuer credentials if you want Android "Add to Wallet"
-7. Install dependencies with `npm install`
-8. Start the app with `npm run dev`
+6. Optional: add `STRIPE_STARTER_PAYMENT_LINK_URL` and `STRIPE_PRO_PAYMENT_LINK_URL` if you want Stripe-hosted Payment Links instead of creating Checkout Sessions in-app
+7. If you use Payment Links, configure promotion codes, collected names, and the post-payment redirect inside Stripe
+8. Add Google Wallet issuer credentials if you want Android "Add to Wallet"
+9. Install dependencies with `npm install`
+10. Start the app with `npm run dev`
 
 ## Suggested launch order
 
@@ -54,4 +57,5 @@ This workspace now contains two layers:
 - Enterprise uses a contact-sales flow instead of self-serve checkout
 - Google Wallet can be generated in-app when issuer credentials are configured
 - Apple Wallet still needs a signed `.pkpass` URL or pass service
+- Stripe Payment Links can collect full name and business name, allow promotion codes, and still activate LinxPass accounts through the webhook when the link includes `client_reference_id`
 - The current webhook handler is production-shaped, but you still need live Stripe price IDs and webhook forwarding before billing goes end-to-end

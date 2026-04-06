@@ -8,26 +8,114 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
 
-async function resolveProfileId(admin: ReturnType<typeof createSupabaseAdminClient>, metadata: Record<string, string | undefined>) {
-  if (metadata.user_id) {
-    return metadata.user_id;
-  }
+type ProfileLookupOptions = {
+  clientReferenceId?: string | null;
+  customerId?: string | null;
+  email?: string | null;
+  metadata?: Record<string, string | undefined>;
+  subscriptionId?: string | null;
+};
 
-  if (!metadata.email) {
+async function findProfileIdByEmail(admin: ReturnType<typeof createSupabaseAdminClient>, email?: string | null) {
+  if (!email) {
     return null;
   }
 
   const { data: profile } = await admin
     .from("profiles")
     .select("id")
-    .eq("email", metadata.email)
+    .eq("email", email)
     .maybeSingle<{ id: string }>();
 
   return profile?.id ?? null;
 }
 
-async function upsertSubscriptionFromEvent(eventObject: Stripe.Subscription | Stripe.Checkout.Session) {
+async function resolveProfileId(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  { clientReferenceId, customerId, email, metadata = {}, subscriptionId }: ProfileLookupOptions
+) {
+  if (metadata.user_id) {
+    return metadata.user_id;
+  }
+
+  if (clientReferenceId) {
+    return clientReferenceId;
+  }
+
+  const emailMatch = await findProfileIdByEmail(admin, metadata.email || email);
+
+  if (emailMatch) {
+    return emailMatch;
+  }
+
+  if (subscriptionId) {
+    const { data: existingSubscription } = await admin
+      .from("subscriptions")
+      .select("profile_id")
+      .eq("stripe_subscription_id", subscriptionId)
+      .maybeSingle<{ profile_id: string }>();
+
+    if (existingSubscription?.profile_id) {
+      return existingSubscription.profile_id;
+    }
+  }
+
+  if (!customerId) {
+    return null;
+  }
+
+  const { data: existingSubscription } = await admin
+    .from("subscriptions")
+    .select("profile_id")
+    .eq("stripe_customer_id", customerId)
+    .maybeSingle<{ profile_id: string }>();
+
+  return existingSubscription?.profile_id ?? null;
+}
+
+async function upsertSubscriptionRecord(
+  subscription: Stripe.Subscription,
+  context: {
+    email?: string | null;
+    plan?: "starter" | "pro" | null;
+    profileId?: string | null;
+  } = {}
+) {
   const admin = createSupabaseAdminClient();
+  const priceId = subscription.items.data[0]?.price.id || null;
+  const plan = context.plan || planFromPriceId(priceId) || (subscription.metadata.plan as "starter" | "pro" | null);
+  const profileId =
+    context.profileId ||
+    (await resolveProfileId(admin, {
+      customerId: typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id,
+      email: context.email,
+      metadata: subscription.metadata || {},
+      subscriptionId: subscription.id
+    }));
+
+  if (!profileId || !plan) {
+    return;
+  }
+
+  const currentPeriodEnd = (subscription as Stripe.Subscription & { current_period_end?: number }).current_period_end;
+
+  await admin.from("subscriptions").upsert(
+    {
+      profile_id: profileId,
+      stripe_customer_id: typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id,
+      stripe_subscription_id: subscription.id,
+      plan,
+      status: subscription.status,
+      current_period_end: currentPeriodEnd ? new Date(currentPeriodEnd * 1000).toISOString() : null,
+      cancel_at_period_end: subscription.cancel_at_period_end
+    } as never,
+    {
+      onConflict: "profile_id"
+    }
+  );
+}
+
+async function upsertSubscriptionFromEvent(eventObject: Stripe.Subscription | Stripe.Checkout.Session) {
   const stripe = getStripeClient();
 
   if (eventObject.object === "checkout.session") {
@@ -38,35 +126,24 @@ async function upsertSubscriptionFromEvent(eventObject: Stripe.Subscription | St
       return;
     }
 
+    const admin = createSupabaseAdminClient();
     const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-    await upsertSubscriptionFromEvent(subscription);
+    const profileId = await resolveProfileId(admin, {
+      clientReferenceId: eventObject.client_reference_id,
+      customerId: typeof eventObject.customer === "string" ? eventObject.customer : eventObject.customer?.id,
+      email: eventObject.customer_details?.email || eventObject.customer_email,
+      metadata: eventObject.metadata || {},
+      subscriptionId
+    });
+
+    await upsertSubscriptionRecord(subscription, {
+      email: eventObject.customer_details?.email || eventObject.customer_email,
+      profileId
+    });
     return;
   }
 
-  const priceId = eventObject.items.data[0]?.price.id || null;
-  const plan = planFromPriceId(priceId) || (eventObject.metadata.plan as "starter" | "pro" | null);
-  const profileId = await resolveProfileId(admin, eventObject.metadata || {});
-
-  if (!profileId || !plan) {
-    return;
-  }
-
-  const currentPeriodEnd = (eventObject as Stripe.Subscription & { current_period_end?: number }).current_period_end;
-
-  await admin.from("subscriptions").upsert(
-    {
-      profile_id: profileId,
-      stripe_customer_id: typeof eventObject.customer === "string" ? eventObject.customer : eventObject.customer?.id,
-      stripe_subscription_id: eventObject.id,
-      plan,
-      status: eventObject.status,
-      current_period_end: currentPeriodEnd ? new Date(currentPeriodEnd * 1000).toISOString() : null,
-      cancel_at_period_end: eventObject.cancel_at_period_end
-    } as never,
-    {
-      onConflict: "profile_id"
-    }
-  );
+  await upsertSubscriptionRecord(eventObject);
 }
 
 export async function POST(request: Request) {

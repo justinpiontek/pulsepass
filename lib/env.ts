@@ -15,7 +15,9 @@ const stripeEnvSchema = z.object({
   STRIPE_SECRET_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
   STRIPE_STARTER_PRICE_ID: z.string().min(1),
-  STRIPE_PRO_PRICE_ID: z.string().min(1)
+  STRIPE_PRO_PRICE_ID: z.string().min(1),
+  STRIPE_STARTER_PAYMENT_LINK_URL: z.string().url().optional(),
+  STRIPE_PRO_PAYMENT_LINK_URL: z.string().url().optional()
 });
 
 const googleWalletEnvSchema = z.object({
@@ -56,7 +58,9 @@ export function getStripeEnv() {
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
     STRIPE_STARTER_PRICE_ID: process.env.STRIPE_STARTER_PRICE_ID,
-    STRIPE_PRO_PRICE_ID: process.env.STRIPE_PRO_PRICE_ID
+    STRIPE_PRO_PRICE_ID: process.env.STRIPE_PRO_PRICE_ID,
+    STRIPE_STARTER_PAYMENT_LINK_URL: process.env.STRIPE_STARTER_PAYMENT_LINK_URL,
+    STRIPE_PRO_PAYMENT_LINK_URL: process.env.STRIPE_PRO_PAYMENT_LINK_URL
   });
 }
 
