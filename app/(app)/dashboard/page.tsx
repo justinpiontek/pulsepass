@@ -88,7 +88,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     redirect(`/signin?${params.toString()}`);
   }
 
-  const { account, cards, selectedCard, event, subscription } = await getDashboardData(user.id, query.card);
+  const { account, cards, cardsError, selectedCard, event, subscription } = await getDashboardData(user.id, query.card);
   const plan = getPlan(subscription?.plan || "starter");
   const accessIsActive = hasActiveAccess(subscription?.status);
   const googleWalletIsReady = hasGoogleWalletEnv();
@@ -112,6 +112,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     selectedCard?.full_name ||
     selectedCard?.company_name ||
     "Selected card";
+  const selectedCardSecondary =
+    selectedCard?.company_name || selectedCard?.job_title || selectedCard?.email || "Set up this card";
   const cardSlug = selectedCard?.slug || (user.email?.split("@")[0] ?? user.id.slice(0, 8));
   const contactUrl = selectedCard?.contact_published ? absoluteUrl(`/${cardSlug}`) : null;
   const eventUrl =
@@ -181,10 +183,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           <div className="panel-header">
             <div>
               <div className="section-eyebrow">Dashboard</div>
-              <h1 className="page-title">Manage your cards under one paid account.</h1>
+              <h1 className="page-title">Build each card in a simple order.</h1>
               <p className="lead">
-                Keep one login and one subscription, then create separate public cards for different roles,
-                companies, or audiences.
+                Choose a card, fill in the contact details, publish it, then share that card’s QR. If you are on Pro,
+                you can add an event page to that same card.
               </p>
             </div>
             <span className="badge">{plan.name} active</span>
@@ -193,7 +195,31 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           {query.saved ? <p className="status-message">Saved. Your dashboard is up to date.</p> : null}
           {query.published ? <p className="status-message">Publishing status updated.</p> : null}
           {query.created === "card" ? <p className="status-message">New card created. You can edit it now.</p> : null}
+          {cardsError ? (
+            <p className="status-message error">
+              The card system is not fully set up yet. Run the latest Supabase multi-card migration, then refresh this page.
+            </p>
+          ) : null}
           {dashboardError ? <p className="status-message error">{dashboardError}</p> : null}
+
+          <div className="setup-steps" aria-label="Dashboard workflow">
+            <div className={`setup-step ${selectedCard ? "is-complete" : "is-active"}`}>
+              <strong>1. Choose a card</strong>
+              <span>Select one role or create another card.</span>
+            </div>
+            <div className={`setup-step ${selectedCard ? "is-active" : ""}`}>
+              <strong>2. Fill in the details</strong>
+              <span>Add the contact info, links, photo, and headline.</span>
+            </div>
+            <div className={`setup-step ${selectedCard?.contact_published ? "is-complete" : ""}`}>
+              <strong>3. Publish and share</strong>
+              <span>Turn the card live, then use its QR and wallet pass.</span>
+            </div>
+            <div className={`setup-step ${event?.published ? "is-complete" : ""}`}>
+              <strong>4. Add an event</strong>
+              <span>Optional on Pro when you want RSVP or calendar actions.</span>
+            </div>
+          </div>
 
           <div className="stat-row">
             <div className="stat">
@@ -215,11 +241,11 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
         </section>
 
-        <section className="panel">
+        <section className="panel panel--wide">
           <div className="panel-header">
             <div>
-              <div className="section-eyebrow">Your cards</div>
-              <h2>One account, multiple roles</h2>
+              <div className="section-eyebrow">Step 1</div>
+              <h2>Choose the card you want to work on</h2>
             </div>
             <span className="badge">
               {cards.length}/{cardLimit === 5000 ? "Custom" : cardLimit}
@@ -269,17 +295,41 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </p>
         </section>
 
-        <section className="panel">
-          <div className="panel-header">
-            <div>
-              <div className="section-eyebrow">Selected card</div>
-              <h2>{selectedCardName}</h2>
-            </div>
-            <span className="badge">{selectedCard?.contact_published ? "Published" : "Draft"}</span>
-          </div>
+        {selectedCard ? (
+          <>
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <div className="section-eyebrow">Step 2</div>
+                  <h2>Edit this card</h2>
+                </div>
+                <span className="badge">{selectedCard.contact_published ? "Published" : "Draft"}</span>
+              </div>
 
-          {selectedCard ? (
-            <>
+              <div className="selected-card-header">
+                <div className="selected-card-header__identity">
+                  {profilePhotoUrl ? (
+                    <img
+                      alt={`${selectedCard.full_name || selectedCard.company_name || "Profile"} photo`}
+                      className="selected-card-header__photo"
+                      src={profilePhotoUrl}
+                    />
+                  ) : (
+                    <div className="selected-card-header__fallback">
+                      {(selectedCard.full_name || selectedCard.company_name || "C").slice(0, 1)}
+                    </div>
+                  )}
+                  <div>
+                    <strong>{selectedCardName}</strong>
+                    <span>{selectedCardSecondary}</span>
+                  </div>
+                </div>
+                <div className="selected-card-header__meta">
+                  <span>{selectedCard.contact_published ? "Live now" : "Still draft"}</span>
+                  <span>{contactUrl ? "QR ready to share" : "Publish to generate the live QR"}</span>
+                </div>
+              </div>
+
               <form action={saveCardAction} className="stack-form" encType="multipart/form-data">
                 <input name="card_id" type="hidden" value={selectedCard.id} />
                 <div className="profile-photo-field">
@@ -398,90 +448,85 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   Save card
                 </button>
               </form>
+            </section>
 
-              <form action={toggleCardPublishAction} className="button-row">
-                <input name="card_id" type="hidden" value={selectedCard.id} />
-                <input name="next" type="hidden" value={selectedCard.contact_published ? "false" : "true"} />
-                <button className="ghost-button" type="submit">
-                  {selectedCard.contact_published ? "Unpublish card" : "Publish card"}
-                </button>
-              </form>
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <div className="section-eyebrow">Step 3</div>
+                  <h2>Publish and share this card</h2>
+                </div>
+                <span className="badge">{selectedCard.contact_published ? "Live" : "Draft"}</span>
+              </div>
 
-              <div className="dashboard-links">
+              <div className="publish-summary">
                 <div className="link-tile">
-                  <strong>Card URL</strong>
+                  <strong>Public page</strong>
                   <span className="micro-copy">
-                    {contactUrl ? "This is the live route behind this card’s QR." : "Publish this card to create the live route."}
+                    {contactUrl ? "This card is live and ready to share." : "Publish this card first to turn the QR live."}
                   </span>
                   {contactUrl ? <code>{contactUrl}</code> : null}
                 </div>
+                <form action={toggleCardPublishAction} className="button-row">
+                  <input name="card_id" type="hidden" value={selectedCard.id} />
+                  <input name="next" type="hidden" value={selectedCard.contact_published ? "false" : "true"} />
+                  <button className="primary-button" type="submit">
+                    {selectedCard.contact_published ? "Unpublish card" : "Publish card"}
+                  </button>
+                </form>
               </div>
-            </>
-          ) : (
-            <p className="micro-copy">Create your first card to start building a live QR destination.</p>
-          )}
-        </section>
 
-        <section className="panel">
-          <div className="panel-header">
-            <div>
-              <div className="section-eyebrow">Selected QR</div>
-              <h2>Carry this card anywhere</h2>
-            </div>
-          </div>
-
-          <div className="qr-card">
-            {qrPreviewUrl ? (
-              <img alt="Live QR code" src={qrPreviewUrl} />
-            ) : (
-              <p className="micro-copy">Publish this card to generate its live QR destination.</p>
-            )}
-            <p className="micro-copy">
-              Use this on printed cards if you want, or keep it on your phone. At events, open your wallet pass
-              or this screen and let people scan. They land on this card and can save your info right away.
-            </p>
-            {contactUrl ? (
-              <div className="button-row qr-actions">
-                <a className="ghost-button" download href={qrDownloadPngUrl || undefined}>
-                  Download PNG
-                </a>
-                <a className="ghost-button" download href={qrDownloadSvgUrl || undefined}>
-                  Download SVG
-                </a>
-              </div>
-            ) : null}
-            {contactUrl ? (
-              <div className="button-row qr-actions">
-                {googleWalletPreviewUrl ? (
-                  <a className="primary-button" href={googleWalletPreviewUrl}>
-                    Add to Google Wallet
-                  </a>
+              <div className="qr-card">
+                {qrPreviewUrl ? (
+                  <img alt="Live QR code" src={qrPreviewUrl} />
                 ) : (
-                  <span className="micro-copy">Add Google Wallet credentials to turn on your Android wallet pass.</span>
+                  <p className="micro-copy">Publish this card to generate its live QR destination.</p>
                 )}
-                {selectedCard?.wallet_apple_url ? (
-                  <a className="ghost-button" href={selectedCard.wallet_apple_url}>
-                    Add to Apple Wallet
-                  </a>
-                ) : (
-                  <span className="micro-copy">Connect your Apple Wallet pass URL above to carry this QR on iPhone.</span>
-                )}
+                <p className="micro-copy">
+                  Open this QR on your phone or add it to Wallet. People scan it and land on this card right away.
+                </p>
+                {contactUrl ? (
+                  <div className="button-row qr-actions">
+                    <a className="ghost-button" download href={qrDownloadPngUrl || undefined}>
+                      Download PNG
+                    </a>
+                    <a className="ghost-button" download href={qrDownloadSvgUrl || undefined}>
+                      Download SVG
+                    </a>
+                  </div>
+                ) : null}
+                {contactUrl ? (
+                  <div className="button-row qr-actions">
+                    {googleWalletPreviewUrl ? (
+                      <a className="primary-button" href={googleWalletPreviewUrl}>
+                        Add to Google Wallet
+                      </a>
+                    ) : (
+                      <span className="micro-copy">Add Google Wallet credentials to turn on your Android wallet pass.</span>
+                    )}
+                    {selectedCard.wallet_apple_url ? (
+                      <a className="ghost-button" href={selectedCard.wallet_apple_url}>
+                        Add to Apple Wallet
+                      </a>
+                    ) : (
+                      <span className="micro-copy">Connect your Apple Wallet pass URL above to carry this QR on iPhone.</span>
+                    )}
+                  </div>
+                ) : null}
               </div>
-            ) : null}
-          </div>
-        </section>
+            </section>
 
-        <section className="panel">
-          <div className="panel-header">
-            <div>
-              <div className="section-eyebrow">Event page</div>
-              <h2>{eventsEnabled ? "Optional on this card" : "Upgrade to add events"}</h2>
-            </div>
-            <span className="badge">{event?.published ? "Published" : "Draft"}</span>
-          </div>
+            <section className="panel">
+              <div className="panel-header">
+                <div>
+                  <div className="section-eyebrow">Step 4</div>
+                  <h2>{eventsEnabled ? "Add an event to this card" : "Upgrade to add events"}</h2>
+                </div>
+                <span className="badge">{event?.published ? "Published" : "Draft"}</span>
+              </div>
 
-          {eventsEnabled && selectedCard ? (
-            <>
+              {eventsEnabled ? (
+                <>
               <form action={saveEventAction} className="stack-form">
                 <input name="card_id" type="hidden" value={selectedCard.id} />
                 <input name="event_id" type="hidden" value={event?.id || ""} />
@@ -539,10 +584,10 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 </button>
               </form>
 
-              <div className="dashboard-links">
-                <div className="link-tile">
-                  <strong>Event page URL</strong>
-                  <span className="micro-copy">
+                <div className="dashboard-links">
+                  <div className="link-tile">
+                    <strong>Event page URL</strong>
+                    <span className="micro-copy">
                     {eventUrl
                       ? formatDateRange(event?.starts_at, event?.ends_at, event?.timezone || undefined)
                       : "Save and publish the event page to create the live route."}
@@ -550,21 +595,36 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   {eventUrl ? <code>{eventUrl}</code> : null}
                 </div>
               </div>
-            </>
-          ) : (
-            <div className="notice">
-              <p className="micro-copy">
-                Pro unlocks event pages, RSVP, and add-to-calendar. Each card can have its own event without changing the QR for your other cards.
-              </p>
-              <form action="/api/checkout/session" className="button-row" method="post">
-                <input name="plan" type="hidden" value="pro" />
-                <button className="ghost-button" type="submit">
-                  Upgrade to Pro
-                </button>
-              </form>
-            </div>
-          )}
-        </section>
+                </>
+              ) : (
+                <div className="notice">
+                  <p className="micro-copy">
+                    Pro unlocks event pages, RSVP, and add-to-calendar. Each card can have its own event without changing the QR for your other cards.
+                  </p>
+                  <form action="/api/checkout/session" className="button-row" method="post">
+                    <input name="plan" type="hidden" value="pro" />
+                    <button className="ghost-button" type="submit">
+                      Upgrade to Pro
+                    </button>
+                  </form>
+                </div>
+              )}
+            </section>
+          </>
+        ) : (
+          <section className="panel panel--wide">
+            <div className="section-eyebrow">Next step</div>
+            <h2>Create your first card</h2>
+            <p className="micro-copy">
+              Once you create a card, the rest of the dashboard becomes straightforward: edit the details, publish the card, then share the QR.
+            </p>
+            <form action={createCardAction} className="button-row">
+              <button className="primary-button" disabled={!canCreateCard} type="submit">
+                {canCreateCard ? "Create your first card" : "Card limit reached"}
+              </button>
+            </form>
+          </section>
+        )}
 
         <section className="panel">
           <div className="section-eyebrow">Billing</div>

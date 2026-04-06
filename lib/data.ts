@@ -83,7 +83,7 @@ export type SubscriptionRecord = {
 export async function getDashboardData(userId: string, selectedCardId?: string | null) {
   const supabase = await createSupabaseServerClient();
 
-  const [{ data: account }, { data: cards }, { data: subscription }] = await Promise.all([
+  const [{ data: account }, { data: cards, error: cardsError }, { data: subscription }] = await Promise.all([
     supabase.from("profiles").select("*").eq("id", userId).maybeSingle<ProfileRecord>(),
     supabase
       .from("cards")
@@ -112,6 +112,7 @@ export async function getDashboardData(userId: string, selectedCardId?: string |
   return {
     account: account ?? null,
     cards: resolvedCards,
+    cardsError: cardsError?.message || null,
     selectedCard,
     event: ((events as EventRecord[] | null) || [])[0] ?? null,
     subscription: subscription ?? null

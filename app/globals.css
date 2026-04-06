@@ -760,6 +760,42 @@ button {
   grid-column: 1 / -1;
 }
 
+.setup-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 22px 0 0;
+}
+
+.setup-step {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  border-radius: var(--radius-md);
+  background: rgba(27, 25, 20, 0.04);
+  border: 1px solid rgba(27, 25, 20, 0.06);
+}
+
+.setup-step strong {
+  font-size: 0.96rem;
+}
+
+.setup-step span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.setup-step.is-active {
+  background: rgba(31, 122, 89, 0.1);
+  border-color: rgba(31, 122, 89, 0.16);
+}
+
+.setup-step.is-complete {
+  background: rgba(31, 122, 89, 0.08);
+  border-color: rgba(31, 122, 89, 0.2);
+}
+
 .dashboard-links {
   display: grid;
   gap: 12px;
@@ -823,6 +859,63 @@ button {
 .profile-photo-copy {
   display: grid;
   gap: 10px;
+}
+
+.selected-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 22px;
+  padding: 18px;
+  border-radius: var(--radius-md);
+  background: var(--surface-muted);
+  border: 1px solid rgba(27, 25, 20, 0.06);
+}
+
+.selected-card-header__identity {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.selected-card-header__identity strong,
+.selected-card-header__meta span:first-child {
+  display: block;
+}
+
+.selected-card-header__identity span,
+.selected-card-header__meta span {
+  color: var(--muted);
+}
+
+.selected-card-header__photo,
+.selected-card-header__fallback {
+  width: 72px;
+  height: 72px;
+  border-radius: 22px;
+}
+
+.selected-card-header__photo {
+  object-fit: cover;
+  border: 1px solid rgba(27, 25, 20, 0.08);
+  background: #fff;
+}
+
+.selected-card-header__fallback {
+  display: grid;
+  place-items: center;
+  background: linear-gradient(135deg, rgba(31, 122, 89, 0.14), rgba(255, 255, 255, 0.95));
+  border: 1px solid rgba(31, 122, 89, 0.14);
+  color: var(--accent-dark);
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.selected-card-header__meta {
+  display: grid;
+  gap: 4px;
+  text-align: right;
 }
 
 .profile-photo-preview,
@@ -1001,6 +1094,7 @@ button {
   .signup-plan-grid,
   .feature-grid,
   .pricing-reassurance,
+  .setup-steps,
   .auth-layout,
   .dashboard-grid,
   .sub-grid,
@@ -1025,6 +1119,16 @@ button {
   .profile-photo-field,
   .public-identity {
     grid-template-columns: 1fr;
+  }
+
+  .selected-card-header,
+  .selected-card-header__identity {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .selected-card-header__meta {
+    text-align: left;
   }
 
   .hero {
