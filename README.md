@@ -1,6 +1,6 @@
-# PulsePass
+# LinxPass
 
-PulsePass is the production app foundation for the digital contact-card and event-page product you have been shaping in this repo.
+LinxPass is the production app foundation for the digital contact-card and event-page product you have been shaping in this repo.
 
 This workspace now contains two layers:
 
@@ -13,11 +13,13 @@ This workspace now contains two layers:
 - Self-serve signup for `Starter` and `Pro`
 - Enterprise contact-sales flow
 - Supabase auth foundation
+- Password reset flow
 - Stripe Checkout session endpoint
 - Stripe webhook foundation
 - Database-backed dashboard
 - Public contact pages by slug
 - Public event pages by slug
+- Google Wallet pass generation for contact QR
 - RSVP persistence
 
 ## Stack
@@ -34,8 +36,9 @@ This workspace now contains two layers:
 3. Run the SQL in `supabase/migrations/202604040001_init.sql`
 4. Create Stripe products and recurring prices for Starter and Pro
 5. Add the Stripe price IDs and webhook secret to `.env`
-6. Install dependencies with `npm install`
-7. Start the app with `npm run dev`
+6. Add Google Wallet issuer credentials if you want Android "Add to Wallet"
+7. Install dependencies with `npm install`
+8. Start the app with `npm run dev`
 
 ## Suggested launch order
 
@@ -49,5 +52,6 @@ This workspace now contains two layers:
 ## Notes
 
 - Enterprise uses a contact-sales flow instead of self-serve checkout
-- Wallet links are stored on the profile so you can attach Apple Wallet and Google Wallet URLs later
+- Google Wallet can be generated in-app when issuer credentials are configured
+- Apple Wallet still needs a signed `.pkpass` URL or pass service
 - The current webhook handler is production-shaped, but you still need live Stripe price IDs and webhook forwarding before billing goes end-to-end

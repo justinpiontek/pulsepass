@@ -2,9 +2,10 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 
+import { BRAND_NAME } from "@/lib/brand";
 import { getPublicProfileBySlug } from "@/lib/data";
-import { hasSupabasePublicEnv } from "@/lib/env";
-import { formatDateRange, toVCard } from "@/lib/utils";
+import { hasGoogleWalletEnv, hasSupabasePublicEnv } from "@/lib/env";
+import { absoluteUrl, formatDateRange, toVCard } from "@/lib/utils";
 
 type ContactPageProps = {
   params: Promise<{
@@ -23,6 +24,10 @@ function resolveWalletHref(options: {
 
   if (isAppleDevice && options.appleUrl) {
     return options.appleUrl;
+  }
+
+  if (isAppleDevice) {
+    return null;
   }
 
   if (isAndroidDevice && options.googleUrl) {
@@ -47,6 +52,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
   }
 
   const { profile, featuredEvent } = data;
+  const generatedGoogleWalletUrl = hasGoogleWalletEnv() ? absoluteUrl(`/api/wallet/google/${profile.slug}`) : null;
   const vcardHref = `data:text/vcard;charset=utf-8,${encodeURIComponent(
     toVCard({
       full_name: profile.full_name,
@@ -59,14 +65,14 @@ export default async function ContactPage({ params }: ContactPageProps) {
   )}`;
   const walletHref = resolveWalletHref({
     appleUrl: profile.wallet_apple_url,
-    googleUrl: profile.wallet_google_url,
+    googleUrl: profile.wallet_google_url || generatedGoogleWalletUrl,
     userAgent
   });
 
   return (
     <main className="public-shell">
       <section className="public-card">
-        <div className="section-eyebrow">PulsePass contact page</div>
+        <div className="section-eyebrow">{BRAND_NAME} contact page</div>
         <h1>{profile.full_name || profile.company_name || "Contact page"}</h1>
         <p className="lead">{profile.contact_headline || profile.job_title || profile.company_name || "Stay connected."}</p>
         {profile.bio ? <p className="public-copy">{profile.bio}</p> : null}

@@ -1,4 +1,5 @@
 import { PublicNav } from "@/components/public-nav";
+import { BRAND_NAME } from "@/lib/brand";
 import { getSupportEmail } from "@/lib/env";
 
 type EnterprisePageProps = {
@@ -16,7 +17,7 @@ export default async function EnterprisePage({ searchParams }: EnterprisePagePro
       <main className="auth-shell page-shell">
         <section className="panel panel--wide">
           <div className="section-eyebrow">Enterprise</div>
-          <h1 className="page-title">Roll out PulsePass across your organization.</h1>
+          <h1 className="page-title">Roll out {BRAND_NAME} across your organization.</h1>
           <p className="lead">
             Use Enterprise for bulk employee rollout, department templates, and centrally managed event campaigns.
             Pricing changes by seat count, rollout scope, and onboarding needs.

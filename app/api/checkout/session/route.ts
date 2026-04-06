@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { BRAND_SLUG } from "@/lib/brand";
 import { getStripeEnv, getSiteUrl } from "@/lib/env";
 import { PLANS, type PlanId } from "@/lib/plans";
 import { getStripeClient } from "@/lib/stripe";
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
         plan,
         user_id: userId || "",
         email,
-        product: "pulsepass"
+        product: BRAND_SLUG
       },
       subscription_data: {
         metadata: {

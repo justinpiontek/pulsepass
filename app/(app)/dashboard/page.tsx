@@ -7,9 +7,11 @@ import {
   toggleContactPublishAction,
   toggleEventPublishAction
 } from "@/app/(app)/dashboard/actions";
+import { BRAND_NAME } from "@/lib/brand";
 import { getDashboardData } from "@/lib/data";
-import { hasSupabasePublicEnv } from "@/lib/env";
+import { hasGoogleWalletEnv, hasSupabasePublicEnv } from "@/lib/env";
 import { getPlan, hasActiveAccess, allowsEvents } from "@/lib/plans";
+import { buildQrCodePath } from "@/lib/qr";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { absoluteUrl, formatDateRange } from "@/lib/utils";
 
@@ -30,7 +32,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
       <main className="dashboard-shell">
         <div className="app-nav">
           <Link className="brand" href="/">
-            PulsePass
+            {BRAND_NAME}
           </Link>
         </div>
         <section className="panel panel--wide" style={{ maxWidth: 900, margin: "0 auto" }}>
@@ -65,15 +67,53 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const { profile, event, subscription } = await getDashboardData(user.id);
   const plan = getPlan(subscription?.plan || "starter");
   const accessIsActive = hasActiveAccess(subscription?.status);
+  const googleWalletIsReady = hasGoogleWalletEnv();
+
+  if (!accessIsActive) {
+    const params = new URLSearchParams({
+      billing: "required"
+    });
+
+    if (user.email) {
+      params.set("email", user.email);
+    }
+
+    redirect(`/auth/signout?next=${encodeURIComponent(`/signin?${params.toString()}`)}`);
+  }
+
   const eventsEnabled = allowsEvents(subscription?.plan) && accessIsActive;
   const profileSlug = profile?.slug || (user.email?.split("@")[0] ?? user.id.slice(0, 8));
   const contactUrl = profile?.contact_published ? absoluteUrl(`/${profileSlug}`) : null;
   const eventUrl =
     profile?.contact_published && event?.published ? absoluteUrl(`/${profileSlug}/events/${event.slug}`) : null;
-  const qrUrl = contactUrl
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(contactUrl)}`
+  const qrPreviewUrl = contactUrl
+    ? buildQrCodePath({
+        data: contactUrl,
+        filename: `${profileSlug}-contact-qr`,
+        format: "svg",
+        size: 360
+      })
+    : null;
+  const qrDownloadPngUrl = contactUrl
+    ? buildQrCodePath({
+        data: contactUrl,
+        download: true,
+        filename: `${profileSlug}-contact-qr`,
+        format: "png",
+        size: 1200
+      })
+    : null;
+  const qrDownloadSvgUrl = contactUrl
+    ? buildQrCodePath({
+        data: contactUrl,
+        download: true,
+        filename: `${profileSlug}-contact-qr`,
+        format: "svg",
+        size: 1200
+      })
     : null;
   const currentPlanId = subscription?.plan === "pro" || subscription?.plan === "enterprise" ? subscription.plan : "starter";
+  const googleWalletPreviewUrl = contactUrl && googleWalletIsReady ? absoluteUrl(`/api/wallet/google/${profileSlug}`) : null;
 
   async function signOutAction() {
     "use server";
@@ -87,7 +127,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     <main className="dashboard-shell">
       <div className="app-nav">
         <Link className="brand" href="/">
-          PulsePass
+          {BRAND_NAME}
         </Link>
         <div className="app-nav__actions">
           {contactUrl ? (
@@ -218,12 +258,32 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               <input defaultValue={profile?.wallet_apple_url || ""} name="wallet_apple_url" type="url" />
             </label>
             <label>
-              Google Wallet pass URL
+              Google Wallet override URL
               <input defaultValue={profile?.wallet_google_url || ""} name="wallet_google_url" type="url" />
             </label>
             <p className="micro-copy">
-              If you connect a wallet pass URL, your public page shows one simple <strong>Add to Wallet</strong> button.
+              Android can use an auto-generated Google Wallet pass when your issuer keys are connected. Apple
+              Wallet still needs a signed Apple pass URL or pass service.
             </p>
+            <div className="dashboard-links">
+              <div className="link-tile">
+                <strong>Google Wallet status</strong>
+                <span className="micro-copy">
+                  {googleWalletIsReady
+                    ? "Android visitors can use Add to Wallet from your live page."
+                    : "Add Google Wallet issuer credentials in your environment to turn on Add to Wallet for Android."}
+                </span>
+                {googleWalletPreviewUrl ? <code>{googleWalletPreviewUrl}</code> : null}
+              </div>
+              <div className="link-tile">
+                <strong>Apple Wallet status</strong>
+                <span className="micro-copy">
+                  {profile?.wallet_apple_url
+                    ? "Your Apple Wallet pass URL is connected."
+                    : "Apple Wallet still needs a signed .pkpass link before iPhone visitors can add this QR to Wallet."}
+                </span>
+              </div>
+            </div>
             <button className="primary-button full-width" type="submit">
               Save contact page
             </button>
@@ -257,10 +317,24 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
 
           <div className="qr-card">
-            {qrUrl ? <img alt="Live QR code" src={qrUrl} /> : <p className="micro-copy">Publish your contact page to generate the live QR destination.</p>}
+            {qrPreviewUrl ? (
+              <img alt="Live QR code" src={qrPreviewUrl} />
+            ) : (
+              <p className="micro-copy">Publish your contact page to generate the live QR destination.</p>
+            )}
             <p className="micro-copy">
               Keep this QR on business cards, signs, or print. When an event is published on Pro, people can reach it from the same scan flow.
             </p>
+            {contactUrl ? (
+              <div className="button-row qr-actions">
+                <a className="ghost-button" download href={qrDownloadPngUrl || undefined}>
+                  Download PNG
+                </a>
+                <a className="ghost-button" download href={qrDownloadSvgUrl || undefined}>
+                  Download SVG
+                </a>
+              </div>
+            ) : null}
           </div>
         </section>
 

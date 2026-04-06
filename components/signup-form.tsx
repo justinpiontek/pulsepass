@@ -20,6 +20,16 @@ type SignupState = {
   password: string;
 };
 
+function accountAlreadyExists(message: string) {
+  const normalized = message.toLowerCase();
+  return (
+    normalized.includes("already registered") ||
+    normalized.includes("already exists") ||
+    normalized.includes("already been registered") ||
+    normalized.includes("user already")
+  );
+}
+
 export function SignupForm({ initialPlan }: SignupFormProps) {
   const router = useRouter();
   const [plan, setPlan] = useState<PlanId>(initialPlan);
@@ -54,6 +64,8 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
   }
 
   async function submitSignup() {
+    let createdUserId: string | null = null;
+
     try {
       const supabase = createSupabaseBrowserClient();
       const computedSlug = slugify(form.companyName || form.fullName || form.email.split("@")[0] || "profile");
@@ -75,6 +87,9 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
         throw error;
       }
 
+      createdUserId = data.user?.id ?? null;
+      await supabase.auth.signOut();
+
       const response = await fetch("/api/checkout/session", {
         method: "POST",
         headers: {
@@ -84,7 +99,7 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
           plan,
           email: form.email,
           name: form.fullName,
-          userId: data.user?.id ?? null
+          userId: createdUserId
         })
       });
 
@@ -97,9 +112,14 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
       window.location.assign(payload.url);
     } catch (error) {
       const message = error instanceof Error ? error.message : "We could not create your account.";
+
+      if (createdUserId || accountAlreadyExists(message)) {
+        setInfoMessage("Your login is already set up. Sign in and finish checkout to activate your account.");
+        router.push(`/signin?checkout=${plan}&email=${encodeURIComponent(form.email)}`);
+        return;
+      }
+
       setErrorMessage(message);
-      setInfoMessage("If your account was created, you can sign in and continue checkout from there.");
-      router.push(`/signin?checkout=${plan}&email=${encodeURIComponent(form.email)}`);
     }
   }
 
@@ -109,7 +129,7 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
         <div className="signup-steps" aria-label="Signup steps">
           <span className="signup-step is-active">1. Choose plan</span>
           <span className="signup-step">2. Create login</span>
-          <span className="signup-step">3. Checkout</span>
+          <span className="signup-step">3. Pay</span>
         </div>
 
         <div className="section-eyebrow">Choose your plan</div>
@@ -209,7 +229,7 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
           </div>
 
           <button className="primary-button full-width" disabled={isPending || !canSubmit} type="submit">
-            {isPending ? "Starting checkout..." : `Continue with ${selectedPlan.name}`}
+            {isPending ? "Starting checkout..." : `Create login and continue with ${selectedPlan.name}`}
           </button>
         </form>
 
@@ -223,12 +243,15 @@ export function SignupForm({ initialPlan }: SignupFormProps) {
 
         <div className="signup-inline-note">
           <strong>What happens next</strong>
-          <span>Checkout opens in Stripe. After payment, you land in your dashboard and publish your page.</span>
+          <span>Your login is created first. Payment activates dashboard access, publishing, and your live QR.</span>
         </div>
 
         <div className="signup-links">
           <p className="micro-copy">
-            Already have an account? <Link href="/signin">Sign in</Link>.
+            Already paid? <Link href="/signin">Sign in</Link>.
+          </p>
+          <p className="micro-copy">
+            Already created a login but still need to pay? <Link href="/signin">Resume checkout</Link>.
           </p>
           <p className="micro-copy">
             Need rollout help for a larger organization? <Link href="/enterprise">Contact sales</Link>.

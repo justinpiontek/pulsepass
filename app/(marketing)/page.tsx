@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { PublicNav } from "@/components/public-nav";
+import { BRAND_NAME } from "@/lib/brand";
 import { PLANS } from "@/lib/plans";
 
 const PLAN_META = {
@@ -195,7 +196,7 @@ export default function HomePage() {
           </div>
         </section>
       </main>
-      <footer className="footer">PulsePass keeps your contact page and event page behind one live QR.</footer>
+      <footer className="footer">{BRAND_NAME} keeps your contact page and event page behind one live QR.</footer>
     </>
   );
 }

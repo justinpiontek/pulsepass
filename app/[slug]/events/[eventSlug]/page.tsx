@@ -1,5 +1,6 @@
 import { redirect, notFound } from "next/navigation";
 
+import { BRAND_NAME } from "@/lib/brand";
 import { countEventRsvps, getPublishedEventBySlugs } from "@/lib/data";
 import { hasSupabasePublicEnv } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -81,7 +82,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   return (
     <main className="public-shell">
       <section className="public-card">
-        <div className="section-eyebrow">PulsePass event page</div>
+        <div className="section-eyebrow">{BRAND_NAME} event page</div>
         <h1>{event.title}</h1>
         <p className="lead">{formatDateRange(event.starts_at, event.ends_at, event.timezone || undefined)}</p>
         {event.location ? <p className="public-copy">{event.location}</p> : null}

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { BRAND_NAME } from "@/lib/brand";
 import { hasSupabasePublicEnv } from "@/lib/env";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -29,7 +30,7 @@ export async function PublicNav() {
     <header className="site-header">
       <div className="site-header__inner">
         <Link className="brand" href="/">
-          PulsePass
+          {BRAND_NAME}
         </Link>
         <nav className="site-nav">
           <Link href="/#how-it-works">How it works</Link>
@@ -51,10 +52,10 @@ export async function PublicNav() {
           ) : (
             <>
               <Link className="ghost-button" href="/signin">
-                Sign in
+                Member sign in
               </Link>
               <Link className="primary-button" href="/signup">
-                Start your account
+                Start paid account
               </Link>
             </>
           )}

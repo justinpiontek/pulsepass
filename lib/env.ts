@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { BRAND_SUPPORT_EMAIL } from "@/lib/brand";
+
 const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().min(1)
@@ -16,12 +18,20 @@ const stripeEnvSchema = z.object({
   STRIPE_PRO_PRICE_ID: z.string().min(1)
 });
 
+const googleWalletEnvSchema = z.object({
+  GOOGLE_WALLET_ISSUER_ID: z.string().min(1),
+  GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL: z.string().email(),
+  GOOGLE_WALLET_SERVICE_ACCOUNT_PRIVATE_KEY: z.string().min(1),
+  GOOGLE_WALLET_SERVICE_ACCOUNT_PRIVATE_KEY_ID: z.string().min(1).optional(),
+  GOOGLE_WALLET_CLASS_SUFFIX: z.string().min(1).optional()
+});
+
 export function getSiteUrl() {
   return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 }
 
 export function getSupportEmail() {
-  return process.env.SUPPORT_EMAIL || "hello@pulsepass.com";
+  return process.env.SUPPORT_EMAIL || BRAND_SUPPORT_EMAIL;
 }
 
 export function hasSupabasePublicEnv() {
@@ -48,4 +58,28 @@ export function getStripeEnv() {
     STRIPE_STARTER_PRICE_ID: process.env.STRIPE_STARTER_PRICE_ID,
     STRIPE_PRO_PRICE_ID: process.env.STRIPE_PRO_PRICE_ID
   });
+}
+
+export function hasGoogleWalletEnv() {
+  return Boolean(
+    process.env.GOOGLE_WALLET_ISSUER_ID &&
+      process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL &&
+      process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_PRIVATE_KEY
+  );
+}
+
+export function getGoogleWalletEnv() {
+  const env = googleWalletEnvSchema.parse({
+    GOOGLE_WALLET_ISSUER_ID: process.env.GOOGLE_WALLET_ISSUER_ID,
+    GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL: process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_EMAIL,
+    GOOGLE_WALLET_SERVICE_ACCOUNT_PRIVATE_KEY: process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_PRIVATE_KEY,
+    GOOGLE_WALLET_SERVICE_ACCOUNT_PRIVATE_KEY_ID: process.env.GOOGLE_WALLET_SERVICE_ACCOUNT_PRIVATE_KEY_ID,
+    GOOGLE_WALLET_CLASS_SUFFIX: process.env.GOOGLE_WALLET_CLASS_SUFFIX
+  });
+
+  return {
+    ...env,
+    GOOGLE_WALLET_CLASS_SUFFIX: env.GOOGLE_WALLET_CLASS_SUFFIX || "linxpass-contact",
+    GOOGLE_WALLET_SERVICE_ACCOUNT_PRIVATE_KEY: env.GOOGLE_WALLET_SERVICE_ACCOUNT_PRIVATE_KEY.replace(/\\n/g, "\n")
+  };
 }

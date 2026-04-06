@@ -4,15 +4,22 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
 import { hasSupabasePublicEnv } from "@/lib/env";
+import { hasActiveAccess } from "@/lib/plans";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser";
 
 type SigninFormProps = {
+  billingState?: string;
   checkoutPlan?: string;
   defaultEmail?: string;
   nextPath?: string;
 };
 
-export function SigninForm({ checkoutPlan, defaultEmail = "", nextPath = "/dashboard" }: SigninFormProps) {
+export function SigninForm({
+  billingState,
+  checkoutPlan,
+  defaultEmail = "",
+  nextPath = "/dashboard"
+}: SigninFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [email, setEmail] = useState(defaultEmail);
@@ -32,7 +39,7 @@ export function SigninForm({ checkoutPlan, defaultEmail = "", nextPath = "/dashb
   async function submitSignin() {
     try {
       const supabase = createSupabaseBrowserClient();
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
@@ -41,7 +48,24 @@ export function SigninForm({ checkoutPlan, defaultEmail = "", nextPath = "/dashb
         throw error;
       }
 
-      if (checkoutPlan === "starter" || checkoutPlan === "pro") {
+      if (!data.user) {
+        throw new Error("We could not confirm your account.");
+      }
+
+      const { data: subscription, error: subscriptionError } = await supabase
+        .from("subscriptions")
+        .select("plan,status")
+        .eq("profile_id", data.user.id)
+        .maybeSingle<{ plan: string; status: string }>();
+
+      if (subscriptionError) {
+        await supabase.auth.signOut();
+        throw subscriptionError;
+      }
+
+      const accessIsActive = hasActiveAccess(subscription?.status);
+
+      if (!accessIsActive && (checkoutPlan === "starter" || checkoutPlan === "pro")) {
         const response = await fetch("/api/checkout/session", {
           method: "POST",
           headers: {
@@ -49,17 +73,29 @@ export function SigninForm({ checkoutPlan, defaultEmail = "", nextPath = "/dashb
           },
           body: JSON.stringify({
             plan: checkoutPlan,
-            email
+            email,
+            userId: data.user.id
           })
         });
 
         if (!response.ok) {
+          await supabase.auth.signOut();
           throw new Error("You are signed in, but checkout could not be started.");
         }
 
         const payload = (await response.json()) as { url: string };
+        await supabase.auth.signOut();
         window.location.assign(payload.url);
         return;
+      }
+
+      if (!accessIsActive) {
+        await supabase.auth.signOut();
+        throw new Error(
+          billingState === "success"
+            ? "Payment was received. We are still finishing setup. Try signing in again in a moment."
+            : "Finish checkout before signing in. Choose Starter or Pro to activate your account."
+        );
       }
 
       router.push(nextPath);
@@ -71,7 +107,7 @@ export function SigninForm({ checkoutPlan, defaultEmail = "", nextPath = "/dashb
 
   return (
     <section className="panel auth-panel">
-      <div className="section-eyebrow">Sign in</div>
+      <div className="section-eyebrow">{checkoutPlan ? "Resume payment" : "Member access"}</div>
       <form className="stack-form" onSubmit={handleSubmit}>
         <label>
           Email
@@ -94,7 +130,7 @@ export function SigninForm({ checkoutPlan, defaultEmail = "", nextPath = "/dashb
           />
         </label>
         <button className="primary-button full-width" disabled={isPending || !canSubmit} type="submit">
-          {isPending ? "Signing in..." : checkoutPlan ? "Sign in and continue checkout" : "Sign in"}
+          {isPending ? "Checking account..." : checkoutPlan ? "Continue to secure checkout" : "Open dashboard"}
         </button>
       </form>
       {!canSubmit ? (

@@ -1,5 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 
+import { BRAND_NAME, BRAND_SLUG } from "@/lib/brand";
 import { getSiteUrl } from "@/lib/env";
 
 export function cn(...inputs: ClassValue[]) {
@@ -79,7 +80,7 @@ export function toCalendarFile(event: {
   starts_at?: string | null;
   ends_at?: string | null;
 }, hostName?: string | null) {
-  const uid = `${slugify(event.title || "event")}-${Date.now()}@pulsepass`;
+  const uid = `${slugify(event.title || "event")}-${Date.now()}@${BRAND_SLUG}`;
   const start = event.starts_at ? new Date(event.starts_at) : new Date();
   const end = event.ends_at ? new Date(event.ends_at) : new Date(start.getTime() + 60 * 60 * 1000);
   const dtStamp = new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
@@ -89,13 +90,13 @@ export function toCalendarFile(event: {
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//PulsePass//EN",
+    `PRODID:-//${BRAND_NAME}//EN`,
     "BEGIN:VEVENT",
     `UID:${uid}`,
     `DTSTAMP:${dtStamp}`,
     `DTSTART:${dtStart}`,
     `DTEND:${dtEnd}`,
-    `SUMMARY:${escapeIcsValue(event.title || "PulsePass event")}`,
+    `SUMMARY:${escapeIcsValue(event.title || `${BRAND_NAME} event`)}`,
     `DESCRIPTION:${escapeIcsValue(event.summary || "")}`,
     `LOCATION:${escapeIcsValue(event.location || "")}`,
     hostName ? `ORGANIZER;CN=${escapeIcsValue(hostName)}:MAILTO:` : "",
