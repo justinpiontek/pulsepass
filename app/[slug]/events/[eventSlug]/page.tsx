@@ -1,6 +1,5 @@
 import { redirect, notFound } from "next/navigation";
 
-import { CalendarActionLink } from "@/components/calendar-action-link";
 import { BRAND_NAME } from "@/lib/brand";
 import { countEventRsvps, getPublishedEventBySlugs } from "@/lib/data";
 import { hasSupabasePublicEnv } from "@/lib/env";
@@ -33,6 +32,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const { profile, event } = data;
   const rsvpTotal = await countEventRsvps(event.id);
   const remaining = typeof event.capacity === "number" ? Math.max(event.capacity - rsvpTotal, 0) : null;
+  const appleCalendarHref = absoluteUrl(`/api/calendar/${slug}/${eventSlug}/event.ics`);
   const icsHref = absoluteUrl(`/api/calendar/${slug}/${eventSlug}`);
   const googleCalendarUrl = buildGoogleCalendarUrl(event);
 
@@ -89,13 +89,21 @@ export default async function EventPage({ params, searchParams }: EventPageProps
         {event.summary ? <p className="public-copy">{event.summary}</p> : null}
 
         <div className="public-actions">
-          <CalendarActionLink className="primary-button" googleCalendarUrl={googleCalendarUrl} icsUrl={icsHref} />
+          <a className="primary-button" href={appleCalendarHref}>
+            Apple Calendar
+          </a>
+          <a className="ghost-button" href={googleCalendarUrl} rel="noreferrer" target="_blank">
+            Google Calendar
+          </a>
           <a className="ghost-button" href={icsHref}>
             Download .ics
           </a>
           <a href={`/${profile.slug}`}>Back to contact page</a>
           <a href={`mailto:${profile.email}`}>Email host</a>
         </div>
+        <p className="micro-copy">
+          On iPhone, Apple Calendar works best in Safari. On Android, Google Calendar is usually the fastest option.
+        </p>
 
         <div className="stat-row" style={{ marginTop: 24 }}>
           <div className="stat">
