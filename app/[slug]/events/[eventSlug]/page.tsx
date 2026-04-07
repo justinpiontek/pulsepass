@@ -4,7 +4,7 @@ import { BRAND_NAME } from "@/lib/brand";
 import { countEventRsvps, getPublishedEventBySlugs } from "@/lib/data";
 import { hasSupabasePublicEnv } from "@/lib/env";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { absoluteUrl, buildGoogleCalendarUrl, formatDateRange } from "@/lib/utils";
+import { absoluteUrl, buildGoogleCalendarUrl, formatDateRange, toWebcalUrl } from "@/lib/utils";
 
 type EventPageProps = {
   params: Promise<{
@@ -32,7 +32,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   const { profile, event } = data;
   const rsvpTotal = await countEventRsvps(event.id);
   const remaining = typeof event.capacity === "number" ? Math.max(event.capacity - rsvpTotal, 0) : null;
-  const appleCalendarHref = absoluteUrl(`/api/calendar/${slug}/${eventSlug}/event.ics`);
+  const appleCalendarHref = toWebcalUrl(absoluteUrl(`/api/calendar/${slug}/${eventSlug}/event.ics`));
   const icsHref = absoluteUrl(`/api/calendar/${slug}/${eventSlug}`);
   const googleCalendarUrl = buildGoogleCalendarUrl(event);
 

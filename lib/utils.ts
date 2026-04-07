@@ -20,6 +20,10 @@ export function absoluteUrl(path: string) {
   return new URL(path, getSiteUrl()).toString();
 }
 
+export function toWebcalUrl(url: string) {
+  return url.replace(/^https?:\/\//i, "webcal://");
+}
+
 export function normalizeExternalUrl(value?: string | null) {
   if (!value) {
     return null;

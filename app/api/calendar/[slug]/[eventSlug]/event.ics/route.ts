@@ -31,8 +31,8 @@ export async function GET(_request: Request, context: CalendarFileRouteContext) 
   return new NextResponse(ics, {
     headers: {
       "cache-control": "private, no-store",
-      "content-disposition": `attachment; filename="${data.event.slug}.ics"`,
-      "content-type": "text/calendar; charset=utf-8; method=PUBLISH"
+      "content-disposition": `inline; filename="${data.event.slug}.ics"`,
+      "content-type": "text/calendar; method=PUBLISH; charset=utf-8"
     }
   });
 }
