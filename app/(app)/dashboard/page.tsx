@@ -353,7 +353,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         Profile photo
                         <input accept="image/png,image/jpeg,image/webp,image/heic,image/heif" name="profile_photo" type="file" />
                       </label>
-                      <p className="micro-copy">Upload a square headshot or logo. PNG, JPG, WebP, or HEIC up to 5 MB.</p>
+                      <p className="micro-copy">Upload a square headshot. PNG, JPG, WebP, or HEIC up to 5 MB.</p>
                     </div>
                     <input name="existing_profile_photo_path" type="hidden" value={selectedCard.profile_photo_path || ""} />
                   </div>
@@ -390,7 +390,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                         </div>
                       </label>
                       <p className="micro-copy">
-                        Use one logo and one brand color per card. They will show on the live page people see after scanning.
+                        Use one logo and one color per card. These show on the live card after someone scans.
                       </p>
                     </div>
                     <input name="existing_company_logo_path" type="hidden" value={selectedCard.company_logo_path || ""} />

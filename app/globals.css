@@ -921,6 +921,28 @@ button {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  align-items: stretch;
+}
+
+.brand-assets-grid .profile-photo-field {
+  grid-template-columns: 1fr;
+  gap: 14px;
+  justify-items: start;
+  min-width: 0;
+}
+
+.brand-assets-grid .profile-photo-copy,
+.brand-assets-grid .profile-photo-copy label {
+  width: 100%;
+  min-width: 0;
+}
+
+.brand-assets-grid input[type="file"] {
+  max-width: 100%;
+}
+
+.brand-assets-grid .micro-copy {
+  max-width: 28ch;
 }
 
 .profile-photo-copy {
@@ -933,6 +955,10 @@ button {
   grid-template-columns: auto 1fr;
   gap: 12px;
   align-items: center;
+}
+
+.brand-color-row input[type="text"] {
+  min-width: 0;
 }
 
 .brand-color-picker {
@@ -1041,11 +1067,17 @@ button {
 .company-logo-placeholder,
 .public-company-logo {
   width: min(100%, 180px);
-  min-width: 180px;
   height: 96px;
   border-radius: 24px;
   border: 1px solid rgba(27, 25, 20, 0.08);
   background: #fff;
+}
+
+.brand-assets-grid .company-logo-preview,
+.brand-assets-grid .company-logo-placeholder {
+  width: 100%;
+  max-width: 220px;
+  min-width: 0;
 }
 
 .company-logo-preview,
