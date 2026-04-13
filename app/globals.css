@@ -917,9 +917,33 @@ button {
   border: 1px solid rgba(27, 25, 20, 0.06);
 }
 
+.brand-assets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
 .profile-photo-copy {
   display: grid;
   gap: 10px;
+}
+
+.brand-color-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  align-items: center;
+}
+
+.brand-color-picker {
+  width: 56px;
+  min-width: 56px;
+  height: 48px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fff;
+  cursor: pointer;
 }
 
 .selected-card-header {
@@ -1013,6 +1037,43 @@ button {
   font-weight: 800;
 }
 
+.company-logo-preview,
+.company-logo-placeholder,
+.public-company-logo {
+  width: min(100%, 180px);
+  min-width: 180px;
+  height: 96px;
+  border-radius: 24px;
+  border: 1px solid rgba(27, 25, 20, 0.08);
+  background: #fff;
+}
+
+.company-logo-preview,
+.public-company-logo {
+  object-fit: contain;
+  padding: 14px;
+}
+
+.company-logo-placeholder {
+  display: grid;
+  place-items: center;
+  gap: 6px;
+  padding: 14px;
+  text-align: center;
+  background: linear-gradient(135deg, rgba(31, 122, 89, 0.1), rgba(255, 255, 255, 0.95));
+  color: var(--accent-dark);
+}
+
+.company-logo-placeholder strong {
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.company-logo-placeholder span {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .profile-photo-placeholder span {
   color: var(--muted);
   font-size: 0.85rem;
@@ -1085,8 +1146,57 @@ button {
   gap: 22px;
 }
 
+.public-shell--brand {
+  --public-accent: var(--accent);
+  --public-accent-dark: var(--accent-dark);
+  --public-accent-contrast: #ffffff;
+  --public-accent-soft: rgba(31, 122, 89, 0.12);
+  --public-accent-border: rgba(31, 122, 89, 0.2);
+  --public-accent-glow: rgba(31, 122, 89, 0.2);
+  --public-accent-wash: linear-gradient(135deg, rgba(31, 122, 89, 0.14), rgba(255, 255, 255, 0.96));
+}
+
 .public-card {
   max-width: 760px;
+}
+
+.public-card--brand {
+  border-color: var(--public-accent-border);
+  box-shadow:
+    0 20px 50px rgba(34, 29, 20, 0.08),
+    0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+}
+
+.public-shell--brand .section-eyebrow {
+  color: var(--public-accent-dark);
+}
+
+.public-shell--brand .primary-button:not(.calendar-link--apple) {
+  background: var(--public-accent);
+  color: var(--public-accent-contrast);
+  box-shadow: 0 14px 30px var(--public-accent-glow);
+}
+
+.public-shell--brand .primary-button:not(.calendar-link--apple):hover {
+  background: var(--public-accent-dark);
+}
+
+.public-shell--brand .public-socials a,
+.public-shell--brand .wallet-actions a {
+  background: var(--public-accent-soft);
+  color: var(--public-accent-dark);
+}
+
+.public-shell--brand .public-profile-fallback,
+.public-shell--brand .profile-photo-placeholder,
+.public-shell--brand .selected-card-header__fallback {
+  background: var(--public-accent-wash);
+  border-color: var(--public-accent-border);
+  color: var(--public-accent-dark);
+}
+
+.public-company-logo {
+  margin-bottom: 18px;
 }
 
 .public-identity {
@@ -1196,6 +1306,7 @@ button {
   }
 
   .profile-photo-field,
+  .brand-assets-grid,
   .public-identity {
     grid-template-columns: 1fr;
   }

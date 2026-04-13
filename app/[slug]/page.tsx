@@ -1,11 +1,13 @@
+import type { CSSProperties } from "react";
+
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { BRAND_NAME } from "@/lib/brand";
 import { getPublicProfileBySlug } from "@/lib/data";
 import { hasSupabasePublicEnv } from "@/lib/env";
-import { getProfilePhotoUrl } from "@/lib/storage";
-import { formatDateRange, toVCard } from "@/lib/utils";
+import { getCompanyLogoUrl, getProfilePhotoUrl } from "@/lib/storage";
+import { buildBrandThemeVariables, formatDateRange, toVCard } from "@/lib/utils";
 
 type ContactPageProps = {
   params: Promise<{
@@ -27,6 +29,8 @@ export default async function ContactPage({ params }: ContactPageProps) {
 
   const { profile, featuredEvent } = data;
   const profilePhotoUrl = getProfilePhotoUrl(profile.profile_photo_path);
+  const companyLogoUrl = getCompanyLogoUrl(profile.company_logo_path);
+  const themeStyle = buildBrandThemeVariables(profile.brand_color) as CSSProperties;
   const socialLinks = [
     { label: "LinkedIn", href: profile.linkedin_url },
     { label: "Instagram", href: profile.instagram_url },
@@ -45,9 +49,16 @@ export default async function ContactPage({ params }: ContactPageProps) {
   )}`;
 
   return (
-    <main className="public-shell">
-      <section className="public-card">
+    <main className="public-shell public-shell--brand" style={themeStyle}>
+      <section className="public-card public-card--brand">
         <div className="section-eyebrow">{BRAND_NAME} contact page</div>
+        {companyLogoUrl ? (
+          <img
+            alt={`${profile.company_name || profile.full_name || "Company"} logo`}
+            className="public-company-logo"
+            src={companyLogoUrl}
+          />
+        ) : null}
         <div className="public-identity">
           {profilePhotoUrl ? (
             <img alt={`${profile.full_name || profile.company_name || "Profile"} photo`} className="public-profile-photo" src={profilePhotoUrl} />
@@ -64,7 +75,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
         {profile.bio ? <p className="public-copy">{profile.bio}</p> : null}
 
         <div className="public-actions">
-          <a download={`${profile.slug}.vcf`} href={vcardHref}>
+          <a className="primary-button" download={`${profile.slug}.vcf`} href={vcardHref}>
             Save contact
           </a>
           {profile.phone ? <a href={`tel:${profile.phone}`}>Call</a> : null}
@@ -84,7 +95,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
       </section>
 
       {featuredEvent ? (
-        <section className="public-card">
+        <section className="public-card public-card--brand">
           <div className="section-eyebrow">Linked event</div>
           <h2>{featuredEvent.title}</h2>
           <p className="public-meta">{formatDateRange(featuredEvent.starts_at, featuredEvent.ends_at, featuredEvent.timezone || undefined)}</p>

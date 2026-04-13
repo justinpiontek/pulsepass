@@ -24,6 +24,102 @@ export function toWebcalUrl(url: string) {
   return url.replace(/^https?:\/\//i, "webcal://");
 }
 
+function expandHexColor(value: string) {
+  const trimmed = value.trim().replace(/^#/, "");
+
+  if (/^[0-9a-f]{3}$/i.test(trimmed)) {
+    return trimmed
+      .split("")
+      .map((char) => `${char}${char}`)
+      .join("")
+      .toLowerCase();
+  }
+
+  if (/^[0-9a-f]{6}$/i.test(trimmed)) {
+    return trimmed.toLowerCase();
+  }
+
+  return null;
+}
+
+export function normalizeBrandColor(value?: string | null) {
+  if (!value) {
+    return null;
+  }
+
+  const expanded = expandHexColor(value);
+
+  if (!expanded) {
+    return null;
+  }
+
+  return `#${expanded}`;
+}
+
+function hexToRgb(hex: string) {
+  const expanded = expandHexColor(hex);
+
+  if (!expanded) {
+    return null;
+  }
+
+  const r = Number.parseInt(expanded.slice(0, 2), 16);
+  const g = Number.parseInt(expanded.slice(2, 4), 16);
+  const b = Number.parseInt(expanded.slice(4, 6), 16);
+
+  return { r, g, b };
+}
+
+function darkenHexColor(hex: string, amount = 0.14) {
+  const rgb = hexToRgb(hex);
+
+  if (!rgb) {
+    return hex;
+  }
+
+  const next = [rgb.r, rgb.g, rgb.b]
+    .map((channel) => Math.max(0, Math.min(255, Math.round(channel * (1 - amount)))))
+    .map((channel) => channel.toString(16).padStart(2, "0"))
+    .join("");
+
+  return `#${next}`;
+}
+
+function getContrastTextColor(hex: string) {
+  const rgb = hexToRgb(hex);
+
+  if (!rgb) {
+    return "#ffffff";
+  }
+
+  const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+  return luminance > 0.65 ? "#111111" : "#ffffff";
+}
+
+export function buildBrandThemeVariables(value?: string | null) {
+  const color = normalizeBrandColor(value);
+
+  if (!color) {
+    return {};
+  }
+
+  const rgb = hexToRgb(color);
+
+  if (!rgb) {
+    return {};
+  }
+
+  return {
+    "--public-accent": color,
+    "--public-accent-dark": darkenHexColor(color, 0.16),
+    "--public-accent-contrast": getContrastTextColor(color),
+    "--public-accent-soft": `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`,
+    "--public-accent-border": `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`,
+    "--public-accent-glow": `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.2)`,
+    "--public-accent-wash": `linear-gradient(135deg, rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.14), rgba(255, 255, 255, 0.96))`
+  } satisfies Record<string, string>;
+}
+
 export function normalizeExternalUrl(value?: string | null) {
   if (!value) {
     return null;

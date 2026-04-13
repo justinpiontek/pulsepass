@@ -1,6 +1,7 @@
 import { getSupabasePublicEnv } from "@/lib/env";
 
 export const PROFILE_PHOTO_BUCKET = "profile-photos";
+export const COMPANY_LOGO_BUCKET = "company-logos";
 
 export function getPublicStorageUrl(bucket: string, path: string) {
   const env = getSupabasePublicEnv();
@@ -13,4 +14,12 @@ export function getProfilePhotoUrl(path?: string | null) {
   }
 
   return getPublicStorageUrl(PROFILE_PHOTO_BUCKET, path);
+}
+
+export function getCompanyLogoUrl(path?: string | null) {
+  if (!path) {
+    return null;
+  }
+
+  return getPublicStorageUrl(COMPANY_LOGO_BUCKET, path);
 }

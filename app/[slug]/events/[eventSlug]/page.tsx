@@ -1,10 +1,13 @@
+import type { CSSProperties } from "react";
+
 import { redirect, notFound } from "next/navigation";
 
 import { BRAND_NAME } from "@/lib/brand";
 import { countEventRsvps, getPublishedEventBySlugs } from "@/lib/data";
 import { hasSupabasePublicEnv } from "@/lib/env";
+import { getCompanyLogoUrl } from "@/lib/storage";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { absoluteUrl, buildGoogleCalendarUrl, formatDateRange, toWebcalUrl } from "@/lib/utils";
+import { absoluteUrl, buildBrandThemeVariables, buildGoogleCalendarUrl, formatDateRange, toWebcalUrl } from "@/lib/utils";
 
 type EventPageProps = {
   params: Promise<{
@@ -30,6 +33,8 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   }
 
   const { profile, event } = data;
+  const companyLogoUrl = getCompanyLogoUrl(profile.company_logo_path);
+  const themeStyle = buildBrandThemeVariables(profile.brand_color) as CSSProperties;
   const rsvpTotal = await countEventRsvps(event.id);
   const remaining = typeof event.capacity === "number" ? Math.max(event.capacity - rsvpTotal, 0) : null;
   const appleCalendarHref = toWebcalUrl(absoluteUrl(`/api/calendar/${slug}/${eventSlug}/event.ics`));
@@ -80,9 +85,16 @@ export default async function EventPage({ params, searchParams }: EventPageProps
   }
 
   return (
-    <main className="public-shell">
-      <section className="public-card">
+    <main className="public-shell public-shell--brand" style={themeStyle}>
+      <section className="public-card public-card--brand">
         <div className="section-eyebrow">{BRAND_NAME} event page</div>
+        {companyLogoUrl ? (
+          <img
+            alt={`${profile.company_name || profile.full_name || "Company"} logo`}
+            className="public-company-logo"
+            src={companyLogoUrl}
+          />
+        ) : null}
         <h1>{event.title}</h1>
         <p className="lead">{formatDateRange(event.starts_at, event.ends_at, event.timezone || undefined)}</p>
         {event.location ? <p className="public-copy">{event.location}</p> : null}
@@ -120,7 +132,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
       </section>
 
       {event.rsvp_enabled ? (
-        <section className="public-card">
+        <section className="public-card public-card--brand">
           <div className="section-eyebrow">RSVP</div>
           <h2>Save your spot</h2>
           {query.rsvp === "success" ? <p className="status-message">Your RSVP is in.</p> : null}

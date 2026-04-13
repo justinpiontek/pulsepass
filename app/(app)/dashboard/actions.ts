@@ -6,10 +6,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { allowsEvents, getCardLimit, hasActiveAccess } from "@/lib/plans";
-import { PROFILE_PHOTO_BUCKET } from "@/lib/storage";
+import { COMPANY_LOGO_BUCKET, PROFILE_PHOTO_BUCKET } from "@/lib/storage";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { normalizeExternalUrl, slugify } from "@/lib/utils";
+import { normalizeBrandColor, normalizeExternalUrl, slugify } from "@/lib/utils";
 
 function textValue(formData: FormData, key: string) {
   const value = formData.get(key);
@@ -58,6 +58,10 @@ function fileExtensionFromName(name: string, type?: string) {
 
   if (mime === "image/webp") {
     return "webp";
+  }
+
+  if (mime === "image/svg+xml") {
+    return "svg";
   }
 
   if (mime === "image/heic") {
@@ -225,8 +229,11 @@ export async function saveCardAction(formData: FormData) {
     cardId
   );
   const existingPhotoPath = nullableValue(formData, "existing_profile_photo_path");
+  const existingCompanyLogoPath = nullableValue(formData, "existing_company_logo_path");
   const photoInput = formData.get("profile_photo");
+  const companyLogoInput = formData.get("company_logo");
   let profilePhotoPath = existingPhotoPath;
+  let companyLogoPath = existingCompanyLogoPath;
 
   if (photoInput instanceof File && photoInput.size > 0) {
     if (!photoInput.type.startsWith("image/")) {
@@ -258,6 +265,40 @@ export async function saveCardAction(formData: FormData) {
     profilePhotoPath = nextPhotoPath;
   }
 
+  if (companyLogoInput instanceof File && companyLogoInput.size > 0) {
+    if (!companyLogoInput.type.startsWith("image/")) {
+      redirect(dashboardCardHref(cardId, { error: "Upload%20a%20PNG,%20JPG,%20WebP,%20or%20SVG%20logo." }));
+    }
+
+    if (companyLogoInput.size > 4 * 1024 * 1024) {
+      redirect(dashboardCardHref(cardId, { error: "Company%20logo%20must%20be%204MB%20or%20smaller." }));
+    }
+
+    const extension = fileExtensionFromName(companyLogoInput.name, companyLogoInput.type);
+    const fileName = slugify(companyLogoInput.name.replace(/\.[^.]+$/, "") || companyName || fullName || "company-logo");
+    const nextLogoPath = `${user.id}/${cardId}/logo/${Date.now()}-${fileName}.${extension}`;
+
+    const { error: uploadError } = await admin.storage.from(COMPANY_LOGO_BUCKET).upload(nextLogoPath, companyLogoInput, {
+      cacheControl: "3600",
+      contentType: companyLogoInput.type,
+      upsert: false
+    });
+
+    if (uploadError) {
+      redirect(dashboardCardHref(cardId, { error: uploadError.message }));
+    }
+
+    if (existingCompanyLogoPath && existingCompanyLogoPath !== nextLogoPath) {
+      await admin.storage.from(COMPANY_LOGO_BUCKET).remove([existingCompanyLogoPath]);
+    }
+
+    companyLogoPath = nextLogoPath;
+  }
+
+  const brandColor =
+    normalizeBrandColor(nullableValue(formData, "brand_color")) ||
+    normalizeBrandColor(nullableValue(formData, "brand_color_picker"));
+
   const payload = {
     email: textValue(formData, "email") || user.email || "",
     full_name: fullName || null,
@@ -271,6 +312,8 @@ export async function saveCardAction(formData: FormData) {
     facebook_url: normalizeExternalUrl(nullableValue(formData, "facebook_url")),
     x_url: normalizeExternalUrl(nullableValue(formData, "x_url")),
     profile_photo_path: profilePhotoPath,
+    company_logo_path: companyLogoPath,
+    brand_color: brandColor,
     slug,
     contact_headline: nullableValue(formData, "contact_headline"),
     wallet_apple_url: normalizeExternalUrl(nullableValue(formData, "wallet_apple_url")),

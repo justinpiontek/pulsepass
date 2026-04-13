@@ -15,6 +15,8 @@ export type ProfileRecord = {
   facebook_url: string | null;
   x_url: string | null;
   profile_photo_path: string | null;
+  company_logo_path: string | null;
+  brand_color: string | null;
   slug: string;
   contact_published: boolean;
   contact_headline: string | null;
@@ -39,6 +41,8 @@ export type CardRecord = {
   facebook_url: string | null;
   x_url: string | null;
   profile_photo_path: string | null;
+  company_logo_path: string | null;
+  brand_color: string | null;
   slug: string;
   contact_published: boolean;
   contact_headline: string | null;

@@ -15,8 +15,8 @@ import { hasGoogleWalletEnv, hasSupabasePublicEnv } from "@/lib/env";
 import { allowsEvents, getCardLimit, getPlan, hasActiveAccess } from "@/lib/plans";
 import { buildQrCodePath } from "@/lib/qr";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { getProfilePhotoUrl } from "@/lib/storage";
-import { absoluteUrl, formatDateRange } from "@/lib/utils";
+import { getCompanyLogoUrl, getProfilePhotoUrl } from "@/lib/storage";
+import { absoluteUrl, formatDateRange, normalizeBrandColor } from "@/lib/utils";
 
 type DashboardPageProps = {
   searchParams: Promise<{
@@ -148,6 +148,8 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const googleWalletPreviewUrl =
     contactUrl && googleWalletIsReady && selectedCard ? absoluteUrl(`/api/wallet/google/${cardSlug}`) : null;
   const profilePhotoUrl = getProfilePhotoUrl(selectedCard?.profile_photo_path);
+  const companyLogoUrl = getCompanyLogoUrl(selectedCard?.company_logo_path);
+  const brandColorValue = normalizeBrandColor(selectedCard?.brand_color) || "#1f7a59";
   const canCreateCard = cards.length < cardLimit;
   const dashboardError = formatDashboardError(query.error);
 
@@ -332,27 +334,67 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
 
               <form action={saveCardAction} className="stack-form" encType="multipart/form-data">
                 <input name="card_id" type="hidden" value={selectedCard.id} />
-                <div className="profile-photo-field">
-                  {profilePhotoUrl ? (
-                    <img
-                      alt={`${selectedCard.full_name || selectedCard.company_name || "Profile"} photo`}
-                      className="profile-photo-preview"
-                      src={profilePhotoUrl}
-                    />
-                  ) : (
-                    <div className="profile-photo-placeholder">
-                      <strong>{(selectedCard.full_name || selectedCard.company_name || "C").slice(0, 1)}</strong>
-                      <span>Add a headshot or logo</span>
+                <div className="brand-assets-grid">
+                  <div className="profile-photo-field">
+                    {profilePhotoUrl ? (
+                      <img
+                        alt={`${selectedCard.full_name || selectedCard.company_name || "Profile"} photo`}
+                        className="profile-photo-preview"
+                        src={profilePhotoUrl}
+                      />
+                    ) : (
+                      <div className="profile-photo-placeholder">
+                        <strong>{(selectedCard.full_name || selectedCard.company_name || "C").slice(0, 1)}</strong>
+                        <span>Add a headshot or logo</span>
+                      </div>
+                    )}
+                    <div className="profile-photo-copy">
+                      <label>
+                        Profile photo
+                        <input accept="image/png,image/jpeg,image/webp,image/heic,image/heif" name="profile_photo" type="file" />
+                      </label>
+                      <p className="micro-copy">Upload a square headshot or logo. PNG, JPG, WebP, or HEIC up to 5 MB.</p>
                     </div>
-                  )}
-                  <div className="profile-photo-copy">
-                    <label>
-                      Profile photo
-                      <input accept="image/png,image/jpeg,image/webp,image/heic,image/heif" name="profile_photo" type="file" />
-                    </label>
-                    <p className="micro-copy">Upload a square headshot or logo. PNG, JPG, WebP, or HEIC up to 5 MB.</p>
+                    <input name="existing_profile_photo_path" type="hidden" value={selectedCard.profile_photo_path || ""} />
                   </div>
-                  <input name="existing_profile_photo_path" type="hidden" value={selectedCard.profile_photo_path || ""} />
+
+                  <div className="profile-photo-field">
+                    {companyLogoUrl ? (
+                      <img
+                        alt={`${selectedCard.company_name || selectedCard.full_name || "Company"} logo`}
+                        className="company-logo-preview"
+                        src={companyLogoUrl}
+                      />
+                    ) : (
+                      <div className="company-logo-placeholder">
+                        <strong>{(selectedCard.company_name || selectedCard.full_name || "L").slice(0, 1)}</strong>
+                        <span>Add a company logo</span>
+                      </div>
+                    )}
+                    <div className="profile-photo-copy">
+                      <label>
+                        Company logo
+                        <input accept="image/png,image/jpeg,image/webp,image/svg+xml" name="company_logo" type="file" />
+                      </label>
+                      <label>
+                        Brand color
+                        <div className="brand-color-row">
+                          <input
+                            aria-label="Choose brand color"
+                            className="brand-color-picker"
+                            defaultValue={brandColorValue}
+                            name="brand_color_picker"
+                            type="color"
+                          />
+                          <input defaultValue={brandColorValue} name="brand_color" type="text" />
+                        </div>
+                      </label>
+                      <p className="micro-copy">
+                        Use one logo and one brand color per card. They will show on the live page people see after scanning.
+                      </p>
+                    </div>
+                    <input name="existing_company_logo_path" type="hidden" value={selectedCard.company_logo_path || ""} />
+                  </div>
                 </div>
 
                 <label>
