@@ -86,48 +86,73 @@ export default async function EventPage({ params, searchParams }: EventPageProps
 
   return (
     <main className="public-shell public-shell--brand" style={themeStyle}>
-      <section className="public-card public-card--brand">
-        <div className="section-eyebrow">{BRAND_NAME} event page</div>
-        {companyLogoUrl ? (
-          <img
-            alt={`${profile.company_name || profile.full_name || "Company"} logo`}
-            className="public-company-logo"
-            src={companyLogoUrl}
-          />
-        ) : null}
-        <h1>{event.title}</h1>
-        <p className="lead">{formatDateRange(event.starts_at, event.ends_at, event.timezone || undefined)}</p>
-        {event.location ? <p className="public-copy">{event.location}</p> : null}
-        {event.summary ? <p className="public-copy">{event.summary}</p> : null}
-
-        <div className="public-actions">
-          <a className="primary-button calendar-link--apple" href={appleCalendarHref}>
-            Open in Apple Calendar
-          </a>
-          <a className="ghost-button" href={googleCalendarUrl} rel="noreferrer" target="_blank">
-            Google Calendar
-          </a>
-          <a className="ghost-button" href={icsHref}>
-            Download .ics
-          </a>
-          <a href={`/${profile.slug}`}>Back to contact page</a>
-          <a href={`mailto:${profile.email}`}>Email host</a>
-        </div>
-        <p className="micro-copy">
-          On iPhone, Apple Calendar works best in Safari. On Android, Google Calendar is usually the fastest option.
-        </p>
-
-        <div className="stat-row" style={{ marginTop: 24 }}>
-          <div className="stat">
-            <strong>{rsvpTotal}</strong>
-            <span>RSVPs</span>
+      <section className="public-card public-card--brand public-card--event-page">
+        <div className="public-hero public-hero--event">
+          <div className="public-hero__band">
+            <div className="section-eyebrow">{BRAND_NAME} event page</div>
+            {companyLogoUrl ? (
+              <div className="public-logo-card">
+                <img
+                  alt={`${profile.company_name || profile.full_name || "Company"} logo`}
+                  className="public-company-logo"
+                  src={companyLogoUrl}
+                />
+              </div>
+            ) : profile.company_name ? (
+              <div className="public-logo-card public-logo-card--fallback">
+                <strong>{profile.company_name}</strong>
+              </div>
+            ) : null}
           </div>
-          {typeof remaining === "number" ? (
-            <div className="stat">
-              <strong>{remaining}</strong>
-              <span>Spots left</span>
-            </div>
+
+          <div className="public-identity-card public-identity-card--event">
+            <div className="public-event-tag">Hosted from your LinxPass card</div>
+            <h1 className="public-name">{event.title}</h1>
+            <p className="public-role">{formatDateRange(event.starts_at, event.ends_at, event.timezone || undefined)}</p>
+            {event.location ? <p className="public-company-line">{event.location}</p> : null}
+          </div>
+        </div>
+
+        <div className="public-content-stack">
+          {event.summary ? (
+            <section className="public-section-block">
+              <div className="public-section-heading">About this event</div>
+              <p className="public-copy">{event.summary}</p>
+            </section>
           ) : null}
+
+          <section className="public-section-block public-section-block--soft">
+            <div className="public-section-heading">Add it to your calendar</div>
+            <div className="public-actions">
+              <a className="primary-button calendar-link--apple" href={appleCalendarHref}>
+                Open in Apple Calendar
+              </a>
+              <a className="ghost-button" href={googleCalendarUrl} rel="noreferrer" target="_blank">
+                Google Calendar
+              </a>
+              <a className="ghost-button" href={icsHref}>
+                Download .ics
+              </a>
+              <a href={`/${profile.slug}`}>Back to contact page</a>
+              <a href={`mailto:${profile.email}`}>Email host</a>
+            </div>
+            <p className="micro-copy">
+              On iPhone, Apple Calendar works best in Safari. On Android, Google Calendar is usually the fastest option.
+            </p>
+          </section>
+
+          <div className="stat-row">
+            <div className="stat">
+              <strong>{rsvpTotal}</strong>
+              <span>RSVPs</span>
+            </div>
+            {typeof remaining === "number" ? (
+              <div className="stat">
+                <strong>{remaining}</strong>
+                <span>Spots left</span>
+              </div>
+            ) : null}
+          </div>
         </div>
       </section>
 

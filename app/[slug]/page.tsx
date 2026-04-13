@@ -50,60 +50,104 @@ export default async function ContactPage({ params }: ContactPageProps) {
 
   return (
     <main className="public-shell public-shell--brand" style={themeStyle}>
-      <section className="public-card public-card--brand">
-        <div className="section-eyebrow">{BRAND_NAME} contact page</div>
-        {companyLogoUrl ? (
-          <img
-            alt={`${profile.company_name || profile.full_name || "Company"} logo`}
-            className="public-company-logo"
-            src={companyLogoUrl}
-          />
-        ) : null}
-        <div className="public-identity">
-          {profilePhotoUrl ? (
-            <img alt={`${profile.full_name || profile.company_name || "Profile"} photo`} className="public-profile-photo" src={profilePhotoUrl} />
-          ) : (
-            <div className="public-profile-fallback">
-              {(profile.full_name || profile.company_name || "C").slice(0, 1)}
+      <section className="public-card public-card--brand public-card--contact">
+        <div className="public-hero">
+          <div className="public-hero__band">
+            <div className="section-eyebrow">{BRAND_NAME} contact page</div>
+            {companyLogoUrl ? (
+              <div className="public-logo-card">
+                <img
+                  alt={`${profile.company_name || profile.full_name || "Company"} logo`}
+                  className="public-company-logo"
+                  src={companyLogoUrl}
+                />
+              </div>
+            ) : profile.company_name ? (
+              <div className="public-logo-card public-logo-card--fallback">
+                <strong>{profile.company_name}</strong>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="public-identity-card">
+            {profilePhotoUrl ? (
+              <img alt={`${profile.full_name || profile.company_name || "Profile"} photo`} className="public-profile-photo" src={profilePhotoUrl} />
+            ) : (
+              <div className="public-profile-fallback">
+                {(profile.full_name || profile.company_name || "C").slice(0, 1)}
+              </div>
+            )}
+            <div className="public-identity__copy">
+              <h1 className="public-name">{profile.full_name || profile.company_name || "Contact page"}</h1>
+              <p className="public-role">
+                {profile.contact_headline || profile.job_title || profile.company_name || "Stay connected."}
+              </p>
+              {profile.company_name && profile.full_name ? <p className="public-company-line">{profile.company_name}</p> : null}
             </div>
-          )}
-          <div className="public-identity__copy">
-            <h1>{profile.full_name || profile.company_name || "Contact page"}</h1>
-            <p className="lead">{profile.contact_headline || profile.job_title || profile.company_name || "Stay connected."}</p>
           </div>
         </div>
-        {profile.bio ? <p className="public-copy">{profile.bio}</p> : null}
 
-        <div className="public-actions">
-          <a className="primary-button" download={`${profile.slug}.vcf`} href={vcardHref}>
-            Save contact
-          </a>
-          {profile.phone ? <a href={`tel:${profile.phone}`}>Call</a> : null}
-          <a href={`mailto:${profile.email}`}>Email</a>
-          {profile.website ? <a href={profile.website}>Website</a> : null}
-        </div>
+        <div className="public-content-stack">
+          {profile.bio ? (
+            <section className="public-section-block">
+              <div className="public-section-heading">About</div>
+              <p className="public-copy">{profile.bio}</p>
+            </section>
+          ) : null}
 
-        {socialLinks.length ? (
-          <div className="public-socials">
-            {socialLinks.map((entry) => (
-              <a href={entry.href} key={entry.label} rel="noreferrer" target="_blank">
-                {entry.label}
+          <section className="public-section-block">
+            <div className="public-section-heading">Quick actions</div>
+            <div className="public-action-stack">
+              <a className="primary-button public-action-primary" download={`${profile.slug}.vcf`} href={vcardHref}>
+                Save contact
               </a>
-            ))}
-          </div>
-        ) : null}
+              <div className="public-action-grid">
+                {profile.phone ? (
+                  <a className="ghost-button public-action-secondary" href={`tel:${profile.phone}`}>
+                    Call
+                  </a>
+                ) : null}
+                <a className="ghost-button public-action-secondary" href={`mailto:${profile.email}`}>
+                  Email
+                </a>
+                {profile.website ? (
+                  <a className="ghost-button public-action-secondary" href={profile.website}>
+                    Website
+                  </a>
+                ) : null}
+              </div>
+            </div>
+          </section>
+
+          {socialLinks.length ? (
+            <section className="public-section-block public-section-block--soft">
+              <div className="public-section-heading">Social links</div>
+              <div className="public-socials">
+                {socialLinks.map((entry) => (
+                  <a className="public-social-link" href={entry.href} key={entry.label} rel="noreferrer" target="_blank">
+                    {entry.label}
+                  </a>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </div>
       </section>
 
       {featuredEvent ? (
-        <section className="public-card public-card--brand">
+        <section className="public-card public-card--brand public-card--event-preview">
           <div className="section-eyebrow">Linked event</div>
-          <h2>{featuredEvent.title}</h2>
-          <p className="public-meta">{formatDateRange(featuredEvent.starts_at, featuredEvent.ends_at, featuredEvent.timezone || undefined)}</p>
-          {featuredEvent.location ? <p className="public-copy">{featuredEvent.location}</p> : null}
-          {featuredEvent.summary ? <p className="public-copy">{featuredEvent.summary}</p> : null}
-          <Link className="primary-button" href={`/${profile.slug}/events/${featuredEvent.slug}`}>
-            Open event page
-          </Link>
+          <div className="public-event-preview">
+            <div>
+              <h2>{featuredEvent.title}</h2>
+              <p className="public-meta">{formatDateRange(featuredEvent.starts_at, featuredEvent.ends_at, featuredEvent.timezone || undefined)}</p>
+              {featuredEvent.location ? <p className="public-copy">{featuredEvent.location}</p> : null}
+              {featuredEvent.summary ? <p className="public-copy">{featuredEvent.summary}</p> : null}
+            </div>
+            <Link className="primary-button" href={`/${profile.slug}/events/${featuredEvent.slug}`}>
+              Open event page
+            </Link>
+          </div>
         </section>
       ) : null}
     </main>
