@@ -3,11 +3,13 @@ import type { CSSProperties } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
+import { EmailActionLink } from "@/components/email-action-link";
+import { SaveContactLink } from "@/components/save-contact-link";
 import { BRAND_NAME } from "@/lib/brand";
 import { getPublicProfileBySlug } from "@/lib/data";
 import { hasSupabasePublicEnv } from "@/lib/env";
 import { getCompanyLogoUrl, getProfilePhotoUrl } from "@/lib/storage";
-import { buildBrandThemeVariables, formatDateRange, toVCard } from "@/lib/utils";
+import { buildBrandThemeVariables, formatDateRange } from "@/lib/utils";
 
 type ContactPageProps = {
   params: Promise<{
@@ -37,16 +39,7 @@ export default async function ContactPage({ params }: ContactPageProps) {
     { label: "Facebook", href: profile.facebook_url },
     { label: "X", href: profile.x_url }
   ].filter((entry): entry is { label: string; href: string } => Boolean(entry.href));
-  const vcardHref = `data:text/vcard;charset=utf-8,${encodeURIComponent(
-    toVCard({
-      full_name: profile.full_name,
-      company_name: profile.company_name,
-      job_title: profile.job_title,
-      phone: profile.phone,
-      email: profile.email,
-      website: profile.website
-    })
-  )}`;
+  const vcardHref = `/${profile.slug}/contact.vcf`;
 
   return (
     <main className="public-shell public-shell--brand" style={themeStyle}>
@@ -98,18 +91,14 @@ export default async function ContactPage({ params }: ContactPageProps) {
           <section className="public-section-block">
             <div className="public-section-heading">Quick actions</div>
             <div className="public-action-stack">
-              <a className="primary-button public-action-primary" download={`${profile.slug}.vcf`} href={vcardHref}>
-                Save contact
-              </a>
+              <SaveContactLink href={vcardHref} label="Save contact" />
               <div className="public-action-grid">
                 {profile.phone ? (
                   <a className="ghost-button public-action-secondary" href={`tel:${profile.phone}`}>
                     Call
                   </a>
                 ) : null}
-                <a className="ghost-button public-action-secondary" href={`mailto:${profile.email}`}>
-                  Email
-                </a>
+                <EmailActionLink email={profile.email} />
                 {profile.website ? (
                   <a className="ghost-button public-action-secondary" href={profile.website}>
                     Website

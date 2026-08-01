@@ -168,6 +168,38 @@ export function escapeIcsValue(value: string) {
   return value.replace(/\\/g, "\\\\").replace(/,/g, "\\,").replace(/;/g, "\\;").replace(/\n/g, "\\n");
 }
 
+function escapeVCardValue(value: string) {
+  return value.replace(/\\/g, "\\\\").replace(/\n/g, "\\n").replace(/,/g, "\\,").replace(/;/g, "\\;");
+}
+
+function toVCardName(fullName?: string | null) {
+  const normalized = (fullName || "").trim().replace(/\s+/g, " ");
+
+  if (!normalized) {
+    return {
+      formatted: "",
+      structured: ";;;;"
+    };
+  }
+
+  const parts = normalized.split(" ");
+
+  if (parts.length === 1) {
+    return {
+      formatted: normalized,
+      structured: `${escapeVCardValue(parts[0])};;;;`
+    };
+  }
+
+  const familyName = parts[parts.length - 1];
+  const givenName = parts.slice(0, -1).join(" ");
+
+  return {
+    formatted: escapeVCardValue(normalized),
+    structured: `${escapeVCardValue(familyName)};${escapeVCardValue(givenName)};;;`
+  };
+}
+
 export function toVCard(profile: {
   full_name?: string | null;
   company_name?: string | null;
@@ -176,19 +208,24 @@ export function toVCard(profile: {
   email?: string | null;
   website?: string | null;
 }) {
+  const name = toVCardName(profile.full_name);
+
   return [
     "BEGIN:VCARD",
     "VERSION:3.0",
-    `FN:${profile.full_name || ""}`,
-    `ORG:${profile.company_name || ""}`,
-    `TITLE:${profile.job_title || ""}`,
-    profile.phone ? `TEL;TYPE=CELL:${profile.phone}` : "",
-    profile.email ? `EMAIL:${profile.email}` : "",
-    profile.website ? `URL:${profile.website}` : "",
+    `N:${name.structured}`,
+    `FN:${name.formatted}`,
+    profile.company_name ? `ORG:${escapeVCardValue(profile.company_name)}` : "",
+    profile.job_title ? `TITLE:${escapeVCardValue(profile.job_title)}` : "",
+    profile.phone ? `TEL;TYPE=CELL,VOICE:${escapeVCardValue(profile.phone)}` : "",
+    profile.email ? `EMAIL;TYPE=INTERNET:${escapeVCardValue(profile.email)}` : "",
+    profile.website ? `URL:${escapeVCardValue(profile.website)}` : "",
+    "PRODID:-//LinxPass//EN",
     "END:VCARD"
   ]
     .filter(Boolean)
-    .join("\r\n");
+    .join("\r\n")
+    .concat("\r\n");
 }
 
 export function toCalendarFile(event: {

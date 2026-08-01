@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 
 import { redirect, notFound } from "next/navigation";
 
+import { EmailActionLink } from "@/components/email-action-link";
 import { BRAND_NAME } from "@/lib/brand";
 import { countEventRsvps, getPublishedEventBySlugs } from "@/lib/data";
 import { hasSupabasePublicEnv } from "@/lib/env";
@@ -134,7 +135,7 @@ export default async function EventPage({ params, searchParams }: EventPageProps
                 Download .ics
               </a>
               <a href={`/${profile.slug}`}>Back to contact page</a>
-              <a href={`mailto:${profile.email}`}>Email host</a>
+              <EmailActionLink email={profile.email} label="Email host" />
             </div>
             <p className="micro-copy">
               On iPhone, Apple Calendar works best in Safari. On Android, Google Calendar is usually the fastest option.
